@@ -49,7 +49,7 @@ describe('setSlideBackgroundImage', () => {
 describe('setSlideBackgroundGradient', () => {
     it('should switch a background color to gradient', () => {
         const slide = createDefaultSlide();
-        const newSlide = setSlideBackgroundGradient(slide, ['#000000', '#FFFFFF']);
+        const newSlide = setSlideBackgroundGradient(slide, ['#000000', '#FFFFFF'], 90);
 
         expect(newSlide.background.type).toBe('gradient');
 
@@ -60,7 +60,7 @@ describe('setSlideBackgroundGradient', () => {
 
     it('should not switch a background color to gradient with unvalid colors', () => {
         const slide = createDefaultSlide();
-        const newSlide = setSlideBackgroundGradient(slide, ['#00000', '#FFFFFF']);
+        const newSlide = setSlideBackgroundGradient(slide, ['#00000', '#FFFFFF'], 90);
 
         expect(newSlide.background.type).not.toBe('gradient');
     });

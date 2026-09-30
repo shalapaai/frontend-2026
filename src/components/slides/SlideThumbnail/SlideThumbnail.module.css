@@ -1,0 +1,16 @@
+.slideThumbnail {
+    width: 150px;
+    height: 84px;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid #c4c7c5;
+    border-radius: 7px;
+}
+
+.slideThumbnail:hover {
+    border: 2px solid #747775;
+}
+
+.slideThumbnailActive {
+    border: 2px solid #0B57D0;
+}

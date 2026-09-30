@@ -12,7 +12,7 @@ type SolidBackground = {
 
 type GradientBackground = {
     colors: string[],
-    angle?: number,
+    angle: number,
     type: 'gradient'
 }
 

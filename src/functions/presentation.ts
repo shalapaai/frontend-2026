@@ -1,5 +1,5 @@
 import type { Presentation } from '../types/presentation.js';
-import { generateId } from './utils.js';
+import { generateId, deepClone } from './utils.js';
 import { createDefaultSlide } from './slide.js';
 
 function createPresentation(name: string = "Новая Презентация"): Presentation {
@@ -7,21 +7,17 @@ function createPresentation(name: string = "Новая Презентация"):
     return {
         id: generateId(),
         name,
-        slides: [defaultSlide],
-        activeSlideId: defaultSlide.id,
+        slides: [defaultSlide]
     };
 }
 
 function updatePresentationName(presentation: Presentation, name: string): Presentation {
     if (name === "") {
-        return {
-            ...presentation
-        }
+        return presentation;
     }
-    return {
-        ...presentation,
-        name,
-    };
+    const newPresentation = deepClone(presentation);
+    newPresentation.name = name;
+    return newPresentation;
 }
 
 function savePresentation(presentation: Presentation): string {

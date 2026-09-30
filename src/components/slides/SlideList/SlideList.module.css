@@ -1,0 +1,10 @@
+.slideList {
+    background: #f8fafd;
+    width: 220px;
+    height: calc(100vh - 75px);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+    padding-top: 25px;
+}

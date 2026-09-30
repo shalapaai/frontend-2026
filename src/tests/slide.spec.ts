@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addSlide, createDefaultSlide, removeSlides, moveSlide, setActiveSlide, duplicateSlide } from '../functions/slide.js';
+import { addSlide, createDefaultSlide, removeSlides, moveSlide, duplicateSlide } from '../functions/slide.js';
 import { createPresentation } from '../functions/presentation.js';
 
 describe('createDefaultSlide', () => {
@@ -14,6 +14,7 @@ describe('createDefaultSlide', () => {
     it('should create a white solid background', () => {
         const slide = createDefaultSlide();
 
+        // в константу вынести
         expect(slide.background).toEqual({
             type: 'solid',
             color: '#FFFFFF'
@@ -77,43 +78,26 @@ describe('moveSlide', () => {
     });
 });
 
-describe('setActiveSlide', () => {
-    it('should switch an active slide', () => {
-        const presentation = addSlide(addSlide(createPresentation()));
-        const thirdSlideIndex = presentation.slides[2].id;
-        const updatedPresentation = setActiveSlide(presentation, thirdSlideIndex);
-        expect(updatedPresentation.activeSlideId).toBe(thirdSlideIndex);
-    });
-
-    it('should not switch an active slide with unvalid id', () => {
-        const presentation = addSlide(addSlide(createPresentation()));
-        const firstSlideIndex = presentation.slides[0].id;
-        const updatedPresentation = setActiveSlide(presentation, "123");
-        expect(updatedPresentation.activeSlideId).toBe(firstSlideIndex);
-    });
-});
-
 describe('duplicateSlide', () => {
     it('should duplicate a slide', () => {
         const presentation = addSlide(addSlide(createPresentation()));
-        const firstSlideIndex = presentation.slides[0].id;
+        const firstSlideId = presentation.slides[0].id;
 
-        const updatedPresentation = duplicateSlide(presentation, firstSlideIndex, 3);
-        expect(updatedPresentation.slides[3]).not.toBe(firstSlideIndex);
-        expect(updatedPresentation.slides[0].objects).toBe(updatedPresentation.slides[3].objects)
+        const updatedPresentation = duplicateSlide(presentation, firstSlideId, 3);
+        expect(updatedPresentation.slides[3].id).not.toBe(firstSlideId);
+        expect(updatedPresentation.slides[0].objects).toEqual(updatedPresentation.slides[3].objects);
     });
 
     it('should not duplicate a slide with unvalid index', () => {
         const presentation = addSlide(addSlide(createPresentation()));
-        const firstSlideIndex = presentation.slides[0].id;
+        const firstSlideId = presentation.slides[0].id;
 
-        const updatedPresentation = duplicateSlide(presentation, firstSlideIndex, -1);
+        const updatedPresentation = duplicateSlide(presentation, firstSlideId, -1);
         expect(updatedPresentation.slides[-1]).not.toBeDefined();
     });
 
     it('should not duplicate a slide with unvalid id', () => {
         const presentation = addSlide(addSlide(createPresentation()));
-        const firstSlideIndex = presentation.slides[0].id;
 
         const updatedPresentation = duplicateSlide(presentation, "123", 3);
         expect(updatedPresentation.slides[3]).not.toBeDefined();

@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-
 import { 
     addObject,
     removeObject,
@@ -7,37 +6,39 @@ import {
 } from '../functions/objects.js';
 import { createDefaultSlide } from '../functions/slide.js';
 
+// вынести в константы
+const BASE_TEXT_OBJECT = {
+    type: 'text',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    text: 'Привет',
+    fontFamily: 'Arial',
+    fontSize: 16,
+    fontColor: '#000000'
+} as const;
+
+const BASE_IMAGE_OBJECT = {
+    type: 'image',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    src: 'images/image.jpg'
+} as const;
+
 describe('addObject', () => {
     it('should add a new text object', () => {
         const slide = createDefaultSlide();
         const newSlide = addObject(
             slide, 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
 
         expect(newSlide.objects.length).toBeGreaterThan(0);
         expect(newSlide.objects[0]).toEqual(
-            expect.objectContaining({
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            })
+            expect.objectContaining(BASE_TEXT_OBJECT)
         );
     });
 
@@ -105,26 +106,12 @@ describe('addObject', () => {
         const slide = createDefaultSlide();
         const newSlide = addObject(
             slide, 
-            {
-                type: 'image',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                src: 'images/image.jpg'
-            }
+            BASE_IMAGE_OBJECT
         );
 
         expect(newSlide.objects.length).toBeGreaterThan(0);
         expect(newSlide.objects[0]).toEqual(
-            expect.objectContaining({
-                type: 'image',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                src: 'images/image.jpg'
-            })
+            expect.objectContaining(BASE_IMAGE_OBJECT)
         );
     });
 });
@@ -133,17 +120,7 @@ describe('removeObject', () => {
     it('should remove an object', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
         const newSlide = removeObject(slide, slide.objects[0].id);
         expect(newSlide.objects.length).toBe(0);
@@ -154,17 +131,7 @@ describe('updateObject', () => {
     it('should update an object cords', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
         const newSlide = updateObject(slide, slide.objects[0].id, {
             x: 100,
@@ -178,17 +145,7 @@ describe('updateObject', () => {
     it('should update an object size', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
         const newSlide = updateObject(slide, slide.objects[0].id, {
             width: 200,
@@ -202,17 +159,7 @@ describe('updateObject', () => {
     it('should update an object text style', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
 
         expect(slide.objects[0].type).toBe('text');
@@ -234,17 +181,7 @@ describe('updateObject', () => {
     it('should not update an object text style with unvalid font family', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
 
         expect(slide.objects[0].type).toBe('text');
@@ -266,17 +203,7 @@ describe('updateObject', () => {
     it('should not update an object text style with unvalid font size', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
 
         expect(slide.objects[0].type).toBe('text');
@@ -298,17 +225,7 @@ describe('updateObject', () => {
     it('should not update an object text style with unvalid font color', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
 
         expect(slide.objects[0].type).toBe('text');
@@ -330,17 +247,7 @@ describe('updateObject', () => {
     it('should update an object text content', () => {
         const slide = addObject(
             createDefaultSlide(), 
-            {
-                type: 'text',
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100,
-                text: 'Привет',
-                fontFamily: 'Arial',
-                fontSize: 16,
-                fontColor: '#000000'
-            }
+            BASE_TEXT_OBJECT
         );
 
         expect(slide.objects[0].type).toBe('text');

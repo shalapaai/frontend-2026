@@ -1,0 +1,38 @@
+.toolbar {
+    background: #f8fafd;
+    height: 75px;
+    display: flex;
+    align-items: center;
+    padding-left: 30px;
+    gap: 20px;
+}
+
+.presentationName {
+    height: 28px;
+    font-size: 18px;
+    border: 3px solid transparent;
+    border-radius: 4px;
+    outline: none;
+    padding: auto;
+    background: none;
+}
+
+.presentationName:hover {
+    border: 1px solid #747775;
+}
+
+.presentationName:focus {
+    border: 3px solid #0B57D0;
+}
+
+.toolbarButton {
+    height: 28px;
+    padding: 1px 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.toolbarButton:hover {
+    background: color-mix(in srgb,var(--gm3-sys-color-on-surface,#1f1f1f) 10%,var(--gm3-sys-color-surface,#fff));
+}

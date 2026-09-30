@@ -1,6 +1,9 @@
 import { Slide } from "../types/slide";
 import { Presentation } from "../types/presentation";
-import { generateId } from "./utils";
+import { generateId, deepClone } from "./utils";
+
+const SLIDE_WIDTH = 1280;
+const SLIDE_HEIGHT = 720;
 
 function createDefaultSlide(): Slide {
     return {
@@ -10,80 +13,55 @@ function createDefaultSlide(): Slide {
             color: '#FFFFFF'
         },
         objects: [],
-        width: 1020,
-        height: 720
+        width: SLIDE_WIDTH,
+        height: SLIDE_HEIGHT
     };
 }
 
 function addSlide(presentation: Presentation): Presentation {
-    const newSlide = createDefaultSlide();
-    return {
-        ...presentation,
-        slides: [...presentation.slides, newSlide],
-    };
+    const newPresentation = deepClone(presentation);
+    newPresentation.slides.push(createDefaultSlide())
+    return newPresentation;
 }
 
 function removeSlides(presentation: Presentation, slideIds: string[]): Presentation {
-    return {
-        ...presentation,
-        slides: presentation.slides.filter(slide => !slideIds.includes(slide.id))
-    }
+    const newPresentation = deepClone(presentation);
+    const slides = newPresentation.slides.filter(slide => !slideIds.includes(slide.id));
+    newPresentation.slides = slides;
+    return newPresentation;
 }
 
 function moveSlide(presentation: Presentation, slideId: string, newIndex: number): Presentation {
     if (newIndex < 0) {
-        return {
-            ...presentation
-        }
+        return presentation;
     }
+    const newPresentation = deepClone(presentation);
 
     const slideIndex = presentation.slides.findIndex(slide => slide.id === slideId);
-    const slides = [...presentation.slides];
+    const slides = newPresentation.slides;
     const [slide] = slides.splice(slideIndex, 1);
-
     slides.splice(newIndex, 0, slide);
-    return {
-        ...presentation,
-        slides
-    }
-}
 
-function setActiveSlide(presentation: Presentation, slideId: string): Presentation {
-    if (presentation.slides.filter(slide => slide.id === slideId).length === 0) {
-        return {
-            ...presentation
-        }
-    }
-    return {
-        ...presentation,
-        activeSlideId: slideId
-    }
+    newPresentation.slides = slides;
+    return newPresentation;
 }
 
 function duplicateSlide(presentation: Presentation, slideId: string, index: number): Presentation {
-    if (index <= 0) {
-        return {
-            ...presentation
-        }
+    if (index < 0) {
+        return presentation;
     }
     const slide = presentation.slides.find(slide => slide.id === slideId);
     if (!slide) {
-        return {
-            ...presentation
-        }
+        return presentation;
     }
-    const newSlide = {
-        ...slide,
-        id: generateId()
-    };
+    const newSlide = deepClone(slide);
     newSlide.id = generateId();
-    const slides = [...presentation.slides];
+    
+    const newPresentation = deepClone(presentation);
+    const slides = newPresentation.slides;
 
     slides.splice(index, 0, newSlide);
-    return {
-        ...presentation,
-        slides
-    }
+    return newPresentation;
 }
 
 export {
@@ -91,6 +69,5 @@ export {
     addSlide,
     removeSlides,
     moveSlide,
-    setActiveSlide,
     duplicateSlide
 }

@@ -1,54 +1,49 @@
 import { Slide } from "../types/slide";
+import { deepClone } from "./utils";
+import { isColorHash } from "./utils";
 
 function setSlideBackgroundColor(slide: Slide, color: string): Slide {
-    if (color.length !== 7 || color[0] !== '#') {
-        return {
-            ...slide
-        }
+    if (!isColorHash(color)) {
+        console.log('setSlideBackgroundColor err');
+        return slide;
     }
-    return {
-        ...slide,
-        background: {
-            type: 'solid',
-            color
-        }
+    const newSlide = deepClone(slide);
+    newSlide.background = {
+        type: 'solid',
+        color
     }
+    return newSlide;
 }
 
 function setSlideBackgroundImage(slide: Slide, imageUrl: string): Slide  {
-    return {
-        ...slide,
-        background: {
-            type: 'image',
-            src: imageUrl
-        }
+    const newSlide = deepClone(slide);
+    newSlide.background = {
+        type: 'image',
+        src: imageUrl
     }
+    return newSlide;
 }
 
-function setSlideBackgroundGradient(slide: Slide, colors: string[], angle?: number): Slide {
-    if (colors.filter(color => color.length !== 7 || color[0] !== '#').length > 0) {
-        return {
-            ...slide
-        }
+function setSlideBackgroundGradient(slide: Slide, colors: string[], angle: number): Slide {
+    if (colors.filter(color => !isColorHash(color)).length > 0) {
+        return slide;
     }
-    return {
-        ...slide,
-        background: {
-            type: 'gradient',
-            colors,
-            angle
-        }
+    const newSlide = deepClone(slide);
+    newSlide.background = {
+        type: 'gradient',
+        colors,
+        angle 
     }
+    return newSlide;
 }
 
 function clearSlideBackground(slide: Slide): Slide {
-    return {
-        ...slide,
-        background: {
-            type: 'solid',
-            color: '#FFFFFF'
-        }
+    const newSlide = deepClone(slide);
+    newSlide.background = {
+        type: 'solid',
+        color: '#FFFFFF'
     }
+    return newSlide;
 }
 
 export {
