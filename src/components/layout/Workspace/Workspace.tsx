@@ -1,15 +1,22 @@
 import { Slide } from "../../../types/slide";
 import styles from "./Workspace.module.css";
-import { SlidePreview } from "../../slides/SlidePreview/SlidePreview";
+import { SlideView } from "../../slides/SlideView/SlideView";
 
 type WorkspaceProps = {
-    slide: Slide,
+    previewSlide: Slide,
+    setPreviewSlide: (s: Slide) => void,
+    activeSlideId: string
 }
 
 function Workspace(props: WorkspaceProps) {
     return (
         <div className={styles.workspace}>
-            <SlidePreview slide={props.slide} />
+            <SlideView 
+                slide={props.previewSlide} 
+                setPreviewSlide={props.setPreviewSlide}
+                preview={true}
+                className="slideWorkspacePreview"
+            />
         </div>
     )
 }

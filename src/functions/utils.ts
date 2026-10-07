@@ -8,6 +8,7 @@ function isColorHash(value: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(value);
 }
 
+// https://github.com/funbox/diamonds/blob/master/lib/deep-clone.ts
 type DeepCloneSupportedType = boolean | number | bigint | string | undefined | null | Date | IDeepCloneSupportedTypeObject | IDeepCloneSupportedTypeArray;
 
 interface IDeepCloneSupportedTypeObject {
@@ -16,7 +17,6 @@ interface IDeepCloneSupportedTypeObject {
 
 interface IDeepCloneSupportedTypeArray extends Array<DeepCloneSupportedType> { }
 
-// https://github.com/funbox/diamonds/blob/master/lib/deep-clone.ts
 function deepClone<T extends DeepCloneSupportedType>(obj: T): T;
 function deepClone(obj: DeepCloneSupportedType): DeepCloneSupportedType {
     if (obj == null || typeof obj !== 'object') {

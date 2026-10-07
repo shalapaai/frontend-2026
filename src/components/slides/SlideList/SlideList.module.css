@@ -1,10 +1,40 @@
 .slideList {
-    background: #f8fafd;
-    width: 220px;
-    height: calc(100vh - 75px);
     display: flex;
     flex-direction: column;
-    gap: 25px;
-    align-items: center;
-    padding-top: 25px;
+    gap: 16px;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.thumbnailWrapper {
+    width: 150px;
+    height: 84.375px;
+    cursor: pointer;
+    border-radius: 7px;
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 1px #c4c7c5;
+    transition: box-shadow 0.2s ease;
+}
+
+.thumbnailWrapper:hover {
+    box-shadow: 0 0 0 2px #747775;
+}
+
+.thumbnailWrapperActive {
+    width: 150px;
+    height: 84.375px;
+    cursor: pointer;
+    border-radius: 7px;
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 2px #0B57D0; 
+    flex-shrink: 0;
+}
+
+.thumbnailInner {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    transform-origin: top left; 
 }

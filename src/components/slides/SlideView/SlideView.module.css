@@ -1,0 +1,22 @@
+.slideView {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    transform: scale(min(calc(100vw / 1280), calc(100vh / 720)));
+    transform-origin: center center;
+}
+
+.slideWorkspacePreview {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    transform: scale(min(calc(100vw / 1280), calc(100vh / 720)));
+    transform-origin: center center;
+    box-shadow: 0 0 0 2px #c4c7c5; 
+}
+
+.slideThumbnail {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+}

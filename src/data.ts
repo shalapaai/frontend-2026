@@ -119,7 +119,6 @@ function createTestPresentation(): Presentation {
             fontColor: '#4caf50'
         });
 
-    console.log(presentation);
     return presentation;
 }
 
