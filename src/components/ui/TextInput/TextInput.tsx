@@ -7,10 +7,10 @@ type TextInputProps = {
 	validate?: (value: string) => boolean;
     className?: string;
     style?: React.CSSProperties;
+    readOnly?: boolean;
 }
 
 function TextInput(props: TextInputProps) {
-    
     const handleSubmit = (e: FocusEvent<HTMLInputElement> | KeyboardEvent<HTMLInputElement>) => {
         const inputElement = e.currentTarget;
         const cleanValue = inputElement.value.trim();
@@ -36,8 +36,8 @@ function TextInput(props: TextInputProps) {
         }
     };
 
-    const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-        handleSubmit(e);
+    const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+        handleSubmit(event);
     };
 
     return (
@@ -50,6 +50,13 @@ function TextInput(props: TextInputProps) {
             style={props.style}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
+            readOnly={props.readOnly}
+            tabIndex={props.readOnly ? -1 : undefined}
+            onMouseDown={event => {
+                if (props.readOnly) {
+                    event.preventDefault();
+                }
+            }}
         />
     );
 }

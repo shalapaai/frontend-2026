@@ -35,6 +35,15 @@ type MenuState =
 function EditorContainer(props: TwoPanelsLayoutProps) {
     let activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
     const [previewSlide, setPreviewSlide] = useState<Slide | undefined>(activeSlide);
+    const [menuState, setMenuState] = useState<MenuState>(null);
+    const [selectedSlideIds, setSelectedSlideIds] = useState<string[]>(
+        props.activeSlideId ? [props.activeSlideId] : []
+    );
+    const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
+    const [selectionTarget, setSelectionTarget] = useState<
+        "slides" | "objects"
+    >("slides");
+
     if (previewSlide !== activeSlide) setPreviewSlide(activeSlide);
 
     const handleSlideChange = (updatedSlide: Slide) => {
@@ -47,7 +56,42 @@ function EditorContainer(props: TwoPanelsLayoutProps) {
         props.setPresentation(newPresentation);
     };
 
-    const [menuState, setMenuState] = useState<MenuState>(null);
+    const clearSelection = () => {
+        setSelectedObjectIds([]);
+        setSelectedSlideIds(
+            props.activeSlideId ? [props.activeSlideId] : []
+        );
+    };
+
+    const deleteSlides = (ids: string[]) => {
+        const updatedPresentation = removeSlides(props.presentation, ids);
+        const remainingSlides = updatedPresentation.slides;
+
+        const nextActiveId = remainingSlides.some(
+            slide => slide.id === props.activeSlideId
+        )
+            ? props.activeSlideId
+            : remainingSlides[0]?.id ?? null;
+
+        props.setPresentation(updatedPresentation);
+        props.setActiveSlideId(nextActiveId);
+        setSelectedSlideIds(nextActiveId ? [nextActiveId] : []);
+        setSelectedObjectIds([]);
+    };
+
+    const deleteObjects = (slideId: string, ids: string[]) => {
+        const slide = props.presentation.slides.find(
+            slide => slide.id === slideId
+        );
+        if (!slide) return;
+
+        handleSlideChange({
+            ...slide,
+            objects: slide.objects.filter(object => !ids.includes(object.id)),
+        });
+
+        setSelectedObjectIds([]);
+    };
 
     useEffect(() => {
         const handleClickOutside = () => {
@@ -63,19 +107,84 @@ function EditorContainer(props: TwoPanelsLayoutProps) {
         };
     }, [menuState !== null]);
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Delete" || event.defaultPrevented) return;
+            const target = event.target;
+            if (
+                target instanceof HTMLElement &&
+                target.closest(
+                    'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+                )
+            ) {
+                return;
+            }
+
+            if (
+                selectionTarget === "objects" &&
+                props.activeSlideId &&
+                selectedObjectIds.length > 0
+            ) {
+                event.preventDefault();
+                deleteObjects(props.activeSlideId, selectedObjectIds);
+            } else if (
+                selectionTarget === "slides" &&
+                selectedSlideIds.length > 0
+            ) {
+                event.preventDefault();
+                deleteSlides(selectedSlideIds);
+            } else {
+                return;
+            }
+
+            setMenuState(null);
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    });
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return;
+
+            setSelectedObjectIds([]);
+            setSelectedSlideIds(
+                props.activeSlideId ? [props.activeSlideId] : []
+            );
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [props.activeSlideId]);
+
     return (
-        <div className={styles.twoPanelsLayout}>
+        <div 
+            className={styles.twoPanelsLayout}
+            onClick={clearSelection}
+        >
             <SlideList 
                 presentation={props.presentation} 
                 setPresentation={props.setPresentation}
                 setActiveSlideId={props.setActiveSlideId}
                 activeSlideId={props.activeSlideId}
                 setMenuState={setMenuState}
+                selectedSlideIds={selectedSlideIds}
+                setSelectedSlideIds={setSelectedSlideIds}
+                setSelectedObjectIds={setSelectedObjectIds}
+                setSelectionTarget={setSelectionTarget}
             />
             <Workspace 
                 previewSlide={previewSlide}
                 setPreviewSlide={handleSlideChange}
                 setMenuState={setMenuState}
+                selectedObjectIds={selectedObjectIds}
+                setSelectedSlideIds={setSelectedSlideIds}
+                setSelectedObjectIds={setSelectedObjectIds}
+                setSelectionTarget={setSelectionTarget}
             />
             {menuState !== null && (
                 <ContextMenu
@@ -83,21 +192,23 @@ function EditorContainer(props: TwoPanelsLayoutProps) {
                     y={menuState.y}
                     onClose={() => setMenuState(null)}
                     onDelete={() => {
-                        const menu = menuState;
-                        if (!menu) return;
-                        if (menu.type === "slide") {
-                            props.setPresentation(removeSlides(props.presentation, [menu.slideId]));
-                            if (props.activeSlideId === menu.slideId) {
-                                const remainingSlides = props.presentation.slides.filter(
-                                    s => s.id !== menu.slideId
-                                );
-                                props.setActiveSlideId(remainingSlides[0]?.id ?? null);
-                            }
-                        } else if (menu.type === "object") {
-                            if (!previewSlide) return;
-                            handleSlideChange(removeObject(previewSlide, menu.objectId));
-                            console.log('delete object: ', menu.objectId);
+                        if (!menuState) return;
+
+                        if (menuState.type === "slide") {
+                            const ids = selectedSlideIds.includes(menuState.slideId)
+                                ? selectedSlideIds
+                                : [menuState.slideId];
+
+                            deleteSlides(ids);
+                        } else {
+                            const ids = selectedObjectIds.includes(menuState.objectId)
+                                ? selectedObjectIds
+                                : [menuState.objectId];
+
+                            deleteObjects(menuState.slideId, ids);
                         }
+
+                        setMenuState(null);
                     }}
                 />
             )}

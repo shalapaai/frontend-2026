@@ -6,38 +6,64 @@ import { Slide } from "../../../types/slide";
 
 type SlideObjectProps = {
     object: SlideObject,
-    key: string,
     slide: Slide,
     preview?: boolean;
     setPreviewSlide?: (s: Slide) => void,
+    selectedObjectIds?: string[],
+    onSelect?: (objectId: string, additive: boolean) => void;
 }
 
 function SlideObject(props: SlideObjectProps) {
+    const isSelected = props.selectedObjectIds?.includes(props.object.id) ?? false;
     if (props.object.type === "text") {
         return (
-            <TextInput 
-                className={props.preview === true ? styles.slideObjectPreview : styles.slideObject}
-                value={props.object.text}
+            <div
+                tabIndex={props.preview ? -1 : undefined}
+                className={[
+                    styles.objectFrame,
+                    props.preview ? styles.objectFramePreview : "",
+                    isSelected ? styles.objectFrameSelected : "",
+                ].join(" ")}
                 style={{
-                    position: "absolute",
-
-                    left: props.object.x,
-                    top: props.object.y,
-
+                    left: props.object.x - 5,
+                    top: props.object.y - 5,
                     width: props.object.width,
                     height: props.object.height,
+                    boxSizing: "content-box",
+                    pointerEvents: props.preview ? "auto" : "none",
+                }}
+                onClick={event => {
+                    if (!props.preview) return;
+                    event.stopPropagation();
+                    if (event.target !== event.currentTarget) {
+                        props.onSelect?.(props.object.id, false);
+                        return;
+                    }
 
-                    fontFamily: props.object.fontFamily,
-                    fontSize: props.object.fontSize,
-                    color: props.object.fontColor,
+                    event.currentTarget.focus();
+                    props.onSelect?.(
+                        props.object.id,
+                        event.ctrlKey || event.metaKey
+                    );
                 }}
-                onSubmit={(value) => {
-                    if (!props.setPreviewSlide) return;
-                    const updatedSlide = updateObject(props.slide, props.object.id, { text: value });
-                    props.setPreviewSlide(updatedSlide);
-                    console.log(value);
-                }}
-            />
+            >
+                <TextInput 
+                    className={styles.objectInput}
+                    value={props.object.text}
+                    style={{
+                        fontFamily: props.object.fontFamily,
+                        fontSize: props.object.fontSize,
+                        color: props.object.fontColor,
+                    }}
+                    onSubmit={(value) => {
+                        if (!props.setPreviewSlide) return;
+                        const updatedSlide = updateObject(props.slide, props.object.id, { text: value });
+                        props.setPreviewSlide(updatedSlide);
+                        console.log(value);
+                    }}
+                    readOnly={!props.preview}
+                />
+            </div>
         )
     } else if (props.object.type === "image") {
         return (

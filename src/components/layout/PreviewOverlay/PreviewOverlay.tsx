@@ -11,6 +11,18 @@ type PreviewOverlayProps = {
 }
 
 function PreviewOverlay(props: PreviewOverlayProps) {
+    const scaleX = window.innerWidth / 1280;
+    const scaleY = window.innerHeight / 720;
+    const scale = Math.min(scaleX, scaleY);
+
+    const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
+    if (!activeSlide) return (
+        <div className={styles.previewOverlay} onClick={props.onClose}>
+            <div className={styles.emptyState}>
+                Добавьте слайд
+            </div>
+        </div>
+    );
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
@@ -38,20 +50,6 @@ function PreviewOverlay(props: PreviewOverlayProps) {
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [props.activeSlideId, props.onClose]);
-
-    const scaleX = window.innerWidth / 1280;
-    const scaleY = window.innerHeight / 720;
-    const scale = Math.min(scaleX, scaleY);
-
-    const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
-    if (!activeSlide) return (
-        <div className={styles.previewOverlay} onClick={props.onClose}>
-            <div className={styles.emptyState}>
-                Добавьте слайд
-            </div>
-        </div>
-    );
-
     return (
         <div className={styles.previewOverlay} onClick={props.onClose}>
             <div

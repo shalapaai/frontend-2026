@@ -38,6 +38,7 @@ function moveSlide(presentation: Presentation, slideId: string, newIndex: number
     const newPresentation = deepClone(presentation);
 
     const slideIndex = presentation.slides.findIndex(slide => slide.id === slideId);
+    if (slideIndex === -1) return presentation;
     const slides = newPresentation.slides;
     const [slide] = slides.splice(slideIndex, 1);
     slides.splice(newIndex, 0, slide);

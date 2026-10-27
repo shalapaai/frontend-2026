@@ -8,7 +8,11 @@ type SlideViewProps = {
     preview: boolean,
     setPreviewSlide?: (slide: Slide) => void,
     className: string,
-    setMenuState?: (menu: MenuState) => void
+    setMenuState?: (menu: MenuState) => void,
+    selectedObjectIds?: string[],
+    setSelectedSlideIds?: (s: string[]) => void,
+    setSelectedObjectIds?: (s: string[]) => void,
+    setSelectionTarget?: (s: "slides" | "objects") => void
 }
 
 function SlideView(props: SlideViewProps) {
@@ -25,6 +29,26 @@ function SlideView(props: SlideViewProps) {
             objectId: objectId
         });
     };
+
+    const handleObjectSelect = (objectId: string, additive: boolean) => {
+        console.log(props.selectedObjectIds);
+        if (props.preview === false || !props.setSelectedObjectIds || 
+            !props.selectedObjectIds || !props.setSelectionTarget) return;
+        
+        props.setSelectionTarget("objects");
+        if (!additive) {
+            props.setSelectedObjectIds([objectId]);
+            return;
+        }
+
+        const selectedIds = props.selectedObjectIds;
+
+        props.setSelectedObjectIds(
+            selectedIds.includes(objectId)
+                ? selectedIds.filter(id => id !== objectId)
+                : [...selectedIds, objectId]
+        );
+    };
     return (
         <div
             className={styles[props.className]}
@@ -40,12 +64,12 @@ function SlideView(props: SlideViewProps) {
                     onContextMenu={(e) => handleContextMenu(e, object.id)}
                 >
                     <SlideObject
-                        key={object.id}
                         slide={props.slide}
                         object={object}
                         preview={props.preview}
                         setPreviewSlide={props.setPreviewSlide}
-                        
+                        selectedObjectIds={props.selectedObjectIds}
+                        onSelect={handleObjectSelect}
                     />
                 </div>
             ))}

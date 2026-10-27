@@ -6,7 +6,11 @@ import { MenuState } from "../EditorContainer/EditorContainer";
 type WorkspaceProps = {
     previewSlide: Slide | undefined,
     setPreviewSlide: (s: Slide) => void,
-    setMenuState: (menu: MenuState) => void
+    setMenuState: (menu: MenuState) => void,
+    selectedObjectIds: string[],
+    setSelectedSlideIds: (s: string[]) => void,
+    setSelectedObjectIds: (s: string[]) => void,
+    setSelectionTarget: (s: "slides" | "objects") => void
 }
 
 function Workspace(props: WorkspaceProps) {
@@ -27,6 +31,10 @@ function Workspace(props: WorkspaceProps) {
                 preview={true}
                 className="slideWorkspacePreview"
                 setMenuState= {props.setMenuState}
+                selectedObjectIds={props.selectedObjectIds}
+                setSelectedSlideIds={props.setSelectedSlideIds}
+                setSelectedObjectIds={props.setSelectedObjectIds}
+                setSelectionTarget={props.setSelectionTarget}
             />
         </div>
     )

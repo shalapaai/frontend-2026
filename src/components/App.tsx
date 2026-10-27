@@ -6,6 +6,11 @@ import { createTestPresentation } from "../data";
 
 export function App() {
     const [presentation, setPresentation] = useState(createTestPresentation());
+    const [previewMode, setPreviewMode] = useState(false);
+    const [activeSlideId, setActiveSlideId] = useState<string | null>(
+        presentation.slides[0]?.id ?? null
+    );
+    
     if (!presentation) {
         return (
             <>
@@ -13,10 +18,6 @@ export function App() {
             </>
         )
     }
-    const [previewMode, setPreviewMode] = useState(false);
-    const [activeSlideId, setActiveSlideId] = useState<string | null>(
-        presentation.slides[0]?.id ?? null
-    );
     
     if (previewMode) {
         return <PreviewOverlay 

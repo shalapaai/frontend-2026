@@ -115,7 +115,11 @@ function Toolbar(props: ToolbarProps) {
                 className={styles.toolbarButton}
                 onClick={() => {
                     props.setPreviewMode(true);
-                    props.setActiveSlideId(props.presentation.slides[0].id);
+                    props.setActiveSlideId(
+                        props.presentation.slides[0] 
+                            ? props.presentation.slides[0].id 
+                            : null
+                    );
                 }}
             />
         </div>

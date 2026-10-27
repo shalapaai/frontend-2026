@@ -16,7 +16,7 @@ function ContextMenu(props: ContextMenuProps) {
                 top: props.y,
                 left: props.x
             }}
-            
+            onClick={event => event.stopPropagation()}
         >
             <Button
                 text={"Удалить"}
