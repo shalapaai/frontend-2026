@@ -12,15 +12,12 @@ type ToolbarProps = {
     presentation: Presentation,
     setPresentation: (p: Presentation) => void,
     setPreviewMode: (mode: boolean) => void,
-    setActiveSlideId: (s: string) => void,
-    activeSlideId: string
+    setActiveSlideId: (s: string | null) => void,
+    activeSlideId: string | null
 }
 
 function Toolbar(props: ToolbarProps) {
     const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
-    if (!activeSlide) return (
-        <></>
-    );
     return (
         <div className={styles.toolbar}>
             <TextInput
@@ -43,6 +40,10 @@ function Toolbar(props: ToolbarProps) {
                 text="Добавить текстовое поле"
                 className={styles.toolbarButton}
                 onClick={() => {
+                    if (!activeSlide) {
+                        alert("Нет активного слайда");
+                        return;
+                    }
                     const updatedSlide = addObject(activeSlide, {
                         type: "text",
                         x: 600,
@@ -85,8 +86,12 @@ function Toolbar(props: ToolbarProps) {
             <input
                 id="slide-bg-color-picker"
                 type="color"
-                value={activeSlide.background.type === "solid" ? activeSlide.background.color : "#ffffff"}
+                
                 onChange={(e) => {
+                    if (!activeSlide) {
+                        alert("Нет активного слайда");
+                        return;
+                    }
                     const updatedSlide = setSlideBackgroundColor(activeSlide, e.target.value);
                     const newPresentation = deepClone(props.presentation);
                     const slideIndex = newPresentation.slides.findIndex(
@@ -97,6 +102,7 @@ function Toolbar(props: ToolbarProps) {
                     }
                     props.setPresentation(newPresentation);
                 }}
+                value={activeSlide && activeSlide.background.type === "solid" ? activeSlide.background.color : "#ffffff"}
                 className={styles.hiddenColorInput}
             />
             <Button

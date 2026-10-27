@@ -5,8 +5,8 @@ import { useEffect } from "react";
 
 type PreviewOverlayProps = {
     presentation: Presentation,
-    activeSlideId: string,
-    setActiveSlideId: (s: string) => void,
+    activeSlideId: string | null,
+    setActiveSlideId: (s: string | null) => void,
     onClose: () => void
 }
 
@@ -44,17 +44,20 @@ function PreviewOverlay(props: PreviewOverlayProps) {
     const scale = Math.min(scaleX, scaleY);
 
     const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
-    if (!activeSlide) return;
+    if (!activeSlide) return (
+        <div className={styles.previewOverlay} onClick={props.onClose}>
+            <div className={styles.emptyState}>
+                Добавьте слайд
+            </div>
+        </div>
+    );
 
     return (
         <div className={styles.previewOverlay} onClick={props.onClose}>
             <div
                 className={styles.slideContainer}
                 style={{
-                    transform: `scale(${scale})`,
-                    backgroundColor: activeSlide.background.type === "solid" 
-                        ? activeSlide.background.color 
-                        : "#ffffff",
+                    transform: `scale(${scale})`
                 }}
             >
                 <SlideView 

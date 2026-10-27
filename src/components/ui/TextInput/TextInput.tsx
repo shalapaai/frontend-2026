@@ -1,5 +1,4 @@
 import { KeyboardEvent, FocusEvent } from "react";
-import { SlideObject } from "../../../types/objects";
 
 type TextInputProps = {
     value: string;
@@ -7,7 +6,6 @@ type TextInputProps = {
     onSubmit?: (value: string) => void;
 	validate?: (value: string) => boolean;
     className?: string;
-    textProperties?: SlideObject;
     style?: React.CSSProperties;
 }
 
@@ -38,7 +36,6 @@ function TextInput(props: TextInputProps) {
         }
     };
 
-    // FocusEvent
     const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
         handleSubmit(e);
     };

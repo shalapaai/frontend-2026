@@ -4,8 +4,6 @@ import { EditorContainer } from "./layout/EditorContainer/EditorContainer";
 import { useState } from "react";
 import { createTestPresentation } from "../data";
 
-
-
 export function App() {
     const [presentation, setPresentation] = useState(createTestPresentation());
     if (!presentation) {
@@ -16,7 +14,9 @@ export function App() {
         )
     }
     const [previewMode, setPreviewMode] = useState(false);
-    const [activeSlideId, setActiveSlideId] = useState(presentation?.slides[0].id);
+    const [activeSlideId, setActiveSlideId] = useState<string | null>(
+        presentation.slides[0]?.id ?? null
+    );
     
     if (previewMode) {
         return <PreviewOverlay 

@@ -3,7 +3,6 @@ import styles from "./SlideObject.module.css";
 import { TextInput } from "../../ui/TextInput/TextInput";
 import { updateObject } from "../../../functions/objects";
 import { Slide } from "../../../types/slide";
-import { deepClone } from "../../../functions/utils";
 
 type SlideObjectProps = {
     object: SlideObject,
@@ -18,7 +17,6 @@ function SlideObject(props: SlideObjectProps) {
         return (
             <TextInput 
                 className={props.preview === true ? styles.slideObjectPreview : styles.slideObject}
-                textProperties={props.object}
                 value={props.object.text}
                 style={{
                     position: "absolute",
@@ -34,9 +32,7 @@ function SlideObject(props: SlideObjectProps) {
                     color: props.object.fontColor,
                 }}
                 onSubmit={(value) => {
-                    if (!props.setPreviewSlide) {
-                        return;
-                    }
+                    if (!props.setPreviewSlide) return;
                     const updatedSlide = updateObject(props.slide, props.object.id, { text: value });
                     props.setPreviewSlide(updatedSlide);
                     console.log(value);
