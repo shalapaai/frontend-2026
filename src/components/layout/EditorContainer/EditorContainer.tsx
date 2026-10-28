@@ -6,14 +6,15 @@ import { useEffect, useState } from "react";
 import { Slide } from "../../../types/slide";
 import { ContextMenu } from "../../ContextMenu/ContextMenu";
 import { removeSlides } from "../../../functions/slide";
-import { removeObject } from "../../../functions/objects";
 import { deepClone } from "../../../functions/utils";
 
-type TwoPanelsLayoutProps = {
+type EditorContainerProps = {
     presentation: Presentation,
     setPresentation: (p: Presentation) => void,
     setActiveSlideId: (s: string | null) => void,
-    activeSlideId: string | null
+    activeSlideId: string | null,
+    selectedObjectIds: string[];
+    setSelectedObjectIds: (s: string[]) => void
 }
 
 type MenuState =
@@ -32,7 +33,7 @@ type MenuState =
     }
     | null;
 
-function EditorContainer(props: TwoPanelsLayoutProps) {
+function EditorContainer(props: EditorContainerProps) {
     let activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
     const [previewSlide, setPreviewSlide] = useState<Slide | undefined>(activeSlide);
     const [menuState, setMenuState] = useState<MenuState>(null);

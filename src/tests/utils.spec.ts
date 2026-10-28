@@ -53,7 +53,7 @@ describe('deepClone', () => {
         const object = {
             name: 'Presentation',
             background: {
-                type: 'solid',
+                type: 'color',
                 color: '#FFFFFF'
             }
         };

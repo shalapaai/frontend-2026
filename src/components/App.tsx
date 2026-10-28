@@ -6,6 +6,7 @@ import { createTestPresentation } from "../data";
 
 export function App() {
     const [presentation, setPresentation] = useState(createTestPresentation());
+    const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
     const [previewMode, setPreviewMode] = useState(false);
     const [activeSlideId, setActiveSlideId] = useState<string | null>(
         presentation.slides[0]?.id ?? null
@@ -30,14 +31,17 @@ export function App() {
     console.log(presentation);
     return (
         <>
-            <Toolbar 
+            <Toolbar
+                selectedObjectIds={selectedObjectIds}
                 presentation={presentation} 
                 setPresentation={setPresentation}
                 setPreviewMode={setPreviewMode}
                 setActiveSlideId={setActiveSlideId}
                 activeSlideId={activeSlideId}
             />
-            <EditorContainer 
+            <EditorContainer
+                selectedObjectIds={selectedObjectIds}
+                setSelectedObjectIds={setSelectedObjectIds}
                 presentation={presentation} 
                 setPresentation={setPresentation}
                 setActiveSlideId={setActiveSlideId}

@@ -5,22 +5,28 @@ import { Button } from "../ui/Button/Button";
 import styles from './Toolbar.module.css';
 import { addSlide } from "../../functions/slide";
 import { addObject } from "../../functions/objects";
-import { setSlideBackgroundColor } from "../../functions/background";
+import type { Dispatch, SetStateAction } from "react";
+import { BackgroundPicker } from "./BackgroundPicker/BackgroundPicker";
 import { deepClone } from "../../functions/utils";
 import { ChangeEvent, useCallback, useRef } from "react";
 
 type ToolbarProps = {
     presentation: Presentation,
-    setPresentation: (p: Presentation) => void,
+    setPresentation: Dispatch<SetStateAction<Presentation>>,
+    selectedObjectIds: string[],
     setPreviewMode: (mode: boolean) => void,
     setActiveSlideId: (s: string | null) => void,
     activeSlideId: string | null
 }
 
 function Toolbar(props: ToolbarProps) {
+    const { activeSlideId, setPresentation } = props;
     const { exportToPdf, isExporting } = usePdfExport();
     const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
     const imageInputRef = useRef<HTMLInputElement>(null);
+    const hasSelectedObject = activeSlide?.objects.some(object =>
+        props.selectedObjectIds.includes(object.id)
+    ) ?? false;
 
     const handleImageChange = useCallback(
         (event: ChangeEvent<HTMLInputElement>) => {
@@ -29,7 +35,7 @@ function Toolbar(props: ToolbarProps) {
 
             if (!file || !file.type.startsWith("image/")) return;
 
-            const slideId = props.activeSlideId;
+            const slideId = activeSlideId;
             if (!slideId) return;
 
             const reader = new FileReader();
@@ -38,21 +44,21 @@ function Toolbar(props: ToolbarProps) {
                 const src = reader.result;
                 if (typeof src !== "string") return;
 
-                const newPresentation = deepClone(props.presentation);
-                newPresentation.slides = newPresentation.slides.map(slide =>
-                    slide.id === slideId
-                        ? addObject(slide, {
-                            type: "image",
-                            src,
-                            x: 200,
-                            y: 150,
-                            width: 300,
-                            height: 200,
-                        })
-                        : slide
-                );
-
-                props.setPresentation(newPresentation);
+                setPresentation(previous => ({
+                    ...previous,
+                    slides: previous.slides.map(slide =>
+                        slide.id === slideId
+                            ? addObject(slide, {
+                                type: "image",
+                                src,
+                                x: 200,
+                                y: 150,
+                                width: 300,
+                                height: 200,
+                            })
+                            : slide
+                    ),
+                }));
             };
 
             reader.onerror = () => {
@@ -61,7 +67,7 @@ function Toolbar(props: ToolbarProps) {
 
             reader.readAsDataURL(file);
         },
-        [props.activeSlideId, props.setPresentation],
+        [activeSlideId, setPresentation],
     );
     return (
         <div className={styles.toolbar}>
@@ -151,39 +157,13 @@ function Toolbar(props: ToolbarProps) {
                 onChange={handleImageChange}
             />
             
-            <Button
-                text="Изменить фон слайда"
-                className={styles.toolbarButton}
-                onClick={() => {
-                    const colorInput = document.getElementById('slide-bg-color-picker') as HTMLInputElement;
-                    if (colorInput) {
-                        colorInput.click();
-                    }
-                }}
-            />
-
-            <input
-                id="slide-bg-color-picker"
-                type="color"
-                
-                onChange={(e) => {
-                    if (!activeSlide) {
-                        alert("Нет активного слайда");
-                        return;
-                    }
-                    const updatedSlide = setSlideBackgroundColor(activeSlide, e.target.value);
-                    const newPresentation = deepClone(props.presentation);
-                    const slideIndex = newPresentation.slides.findIndex(
-                        slide => slide.id === props.activeSlideId
-                    );
-                    if (slideIndex !== -1) {
-                        newPresentation.slides[slideIndex] = updatedSlide;
-                    }
-                    props.setPresentation(newPresentation);
-                }}
-                value={activeSlide && activeSlide.background.type === "solid" ? activeSlide.background.color : "#ffffff"}
-                className={styles.hiddenColorInput}
-            />
+            {activeSlide && !hasSelectedObject && (
+                <BackgroundPicker
+                    key={activeSlide.id}
+                    activeSlide={activeSlide}
+                    setPresentation={setPresentation}
+                />
+            )}
             <Button
                 text={isExporting ? "Экспорт…" : "Экспорт PDF"}
                 className={styles.toolbarButton}

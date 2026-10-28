@@ -9,7 +9,7 @@ function setSlideBackgroundColor(slide: Slide, color: string): Slide {
     }
     const newSlide = deepClone(slide);
     newSlide.background = {
-        type: 'solid',
+        type: 'color',
         color
     }
     return newSlide;
@@ -24,15 +24,17 @@ function setSlideBackgroundImage(slide: Slide, imageUrl: string): Slide  {
     return newSlide;
 }
 
-function setSlideBackgroundGradient(slide: Slide, colors: string[], angle: number): Slide {
-    if (colors.filter(color => !isColorHash(color)).length > 0) {
+function setSlideBackgroundGradient(slide: Slide, colors: string[], angle: number, gradientType: "linear" | "radial" = "linear"): Slide {
+    if (colors.length < 2 || colors.some(color => !isColorHash(color)) ||
+        !Number.isFinite(angle) || angle < 0 || angle > 360) {
         return slide;
     }
     const newSlide = deepClone(slide);
     newSlide.background = {
         type: 'gradient',
         colors,
-        angle 
+        angle,
+        gradientType,
     }
     return newSlide;
 }
@@ -40,7 +42,7 @@ function setSlideBackgroundGradient(slide: Slide, colors: string[], angle: numbe
 function clearSlideBackground(slide: Slide): Slide {
     const newSlide = deepClone(slide);
     newSlide.background = {
-        type: 'solid',
+        type: 'color',
         color: '#FFFFFF'
     }
     return newSlide;

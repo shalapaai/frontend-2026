@@ -7,12 +7,13 @@ type ImageBackground = {
 
 type SolidBackground = {
     color: string,
-    type: 'solid'
+    type: 'color'
 }
 
 type GradientBackground = {
     colors: string[],
     angle: number,
+    gradientType?: 'linear' | 'radial',
     type: 'gradient'
 }
 

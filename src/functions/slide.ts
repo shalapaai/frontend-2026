@@ -9,7 +9,7 @@ function createDefaultSlide(): Slide {
     return {
         id: generateId(),
         background: { 
-            type: 'solid', 
+            type: 'color', 
             color: '#FFFFFF'
         },
         objects: [],

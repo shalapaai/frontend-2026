@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useRef } from "react";
 import type { RefObject } from "react";
 import { Slide } from "../../../types/slide";
@@ -20,6 +21,29 @@ type SlideViewProps = {
 
 function SlideView(props: SlideViewProps) {
     const slideRef = useRef<HTMLDivElement>(null);
+    const background = props.slide.background;
+    let backgroundStyle: CSSProperties;
+    switch (background.type) {
+        case "color":
+            backgroundStyle = { backgroundColor: background.color };
+            break;
+        case "image":
+            backgroundStyle = {
+                backgroundColor: "#fff",
+                backgroundImage: `url(${JSON.stringify(background.src)})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+            };
+            break;
+        case "gradient":
+            backgroundStyle = {
+                background: background.gradientType === "radial"
+                    ? `radial-gradient(ellipse at center, ${background.colors.join(", ")})`
+                    : `linear-gradient(${background.angle}deg, ${background.colors.join(", ")})`,
+            };
+            break;
+    }
     const handleContextMenu = (e: React.MouseEvent, objectId: string) => {
         if (!props.setMenuState) return;
         e.preventDefault(); 
@@ -57,11 +81,7 @@ function SlideView(props: SlideViewProps) {
         <div
             ref={slideRef}
             className={styles[props.className]}
-            style={{
-                background: props.slide.background.type === "solid" 
-                    ? props.slide.background.color 
-                    : "#fff",
-            }}
+            style={backgroundStyle}
         >
             {props.slide.objects.map((object) => (
                 <div 

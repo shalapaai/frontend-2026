@@ -1,0 +1,51 @@
+.toolbarButton {
+    position: relative;
+    height: 28px;
+    padding: 1px 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbarButton:hover {
+    background: color-mix(in srgb,var(--gm3-sys-color-on-surface,#1f1f1f) 10%,var(--gm3-sys-color-surface,#fff));
+}
+
+.backgroundControl {
+    position: relative;
+}
+
+.backgroundPanel {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 100;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #c4c7c5;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px #0002;
+}
+
+.backgroundPanel label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.gradientControls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #c4c7c5;
+    border-radius: 4px;
+}

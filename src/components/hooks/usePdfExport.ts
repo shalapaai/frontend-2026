@@ -21,10 +21,12 @@ async function renderSlide(slide: Slide, host: HTMLDivElement) {
     });
     host.replaceChildren(element);
 
-    if (slide.background.type === "solid") {
+    if (slide.background.type === "color") {
         element.style.backgroundColor = slide.background.color;
     } else if (slide.background.type === "gradient") {
-        element.style.backgroundImage = `linear-gradient(${slide.background.angle}deg, ${slide.background.colors.join(", ")})`;
+        element.style.backgroundImage = slide.background.gradientType === "radial"
+            ? `radial-gradient(ellipse at center, ${slide.background.colors.join(", ")})`
+            : `linear-gradient(${slide.background.angle}deg, ${slide.background.colors.join(", ")})`;
     } else {
         const background = await loadImage(slide.background.src);
         Object.assign(background.style, {

@@ -16,7 +16,7 @@ describe('createDefaultSlide', () => {
 
         // в константу вынести
         expect(slide.background).toEqual({
-            type: 'solid',
+            type: 'color',
             color: '#FFFFFF'
         });
     });
