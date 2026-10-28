@@ -1,10 +1,14 @@
+import type { RefObject } from "react";
 import { SlideObject } from "../../../types/objects";
 import styles from "./SlideObject.module.css";
 import { TextInput } from "../../ui/TextInput/TextInput";
 import { updateObject } from "../../../functions/objects";
 import { Slide } from "../../../types/slide";
+import { useObjectDrag } from "../../hooks/useObjectDrag";
 
 type SlideObjectProps = {
+    workspaceRef?: RefObject<HTMLDivElement | null>;
+    slideRef: RefObject<HTMLDivElement | null>;
     object: SlideObject,
     slide: Slide,
     preview?: boolean;
@@ -15,9 +19,24 @@ type SlideObjectProps = {
 
 function SlideObject(props: SlideObjectProps) {
     const isSelected = props.selectedObjectIds?.includes(props.object.id) ?? false;
+    const { position, dragHandlers } = useObjectDrag({
+        x: props.object.x,
+        y: props.object.y,
+        width: props.object.width,
+        height: props.object.height,
+        workspaceRef: props.workspaceRef,
+        slideRef: props.slideRef,
+        enabled: props.preview === true,
+        onDragEnd: position => {
+            props.setPreviewSlide?.(
+                updateObject(props.slide, props.object.id, position)
+            );
+        },
+    });
     if (props.object.type === "text") {
         return (
             <div
+                {...dragHandlers}
                 tabIndex={props.preview ? -1 : undefined}
                 className={[
                     styles.objectFrame,
@@ -25,8 +44,8 @@ function SlideObject(props: SlideObjectProps) {
                     isSelected ? styles.objectFrameSelected : "",
                 ].join(" ")}
                 style={{
-                    left: props.object.x - 5,
-                    top: props.object.y - 5,
+                    left: position.x - 5,
+                    top: position.y - 5,
                     width: props.object.width,
                     height: props.object.height,
                     boxSizing: "content-box",

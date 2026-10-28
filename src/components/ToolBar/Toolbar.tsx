@@ -1,6 +1,5 @@
 import { updatePresentationName } from "../../functions/presentation";
 import { Presentation } from "../../types/presentation";
-import { TextInput } from "../ui/TextInput/TextInput";
 import { Button } from "../ui/Button/Button";
 import styles from './Toolbar.module.css';
 import { addSlide } from "../../functions/slide";
@@ -20,13 +19,32 @@ function Toolbar(props: ToolbarProps) {
     const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
     return (
         <div className={styles.toolbar}>
-            <TextInput
-                value={props.presentation.name}
-                validate={(value) => value !== ""} 
-                onSubmit={(value) => {
-                    props.setPresentation(updatePresentationName(props.presentation, value.trim()));
-                }}
+            <input
+                type="text"
+                defaultValue={props.presentation.name}
+                key={props.presentation.name}
                 className={styles.presentationName}
+                onBlur={event => {
+                    const name = event.currentTarget.value.trim();
+                    if (!name) {
+                        event.currentTarget.value = props.presentation.name;
+                        return;
+                    }
+                    event.currentTarget.value = name;
+                    if (name !== props.presentation.name) {
+                        props.setPresentation(
+                            updatePresentationName(props.presentation, name)
+                        );
+                    }
+                }}
+                onKeyDown={event => {
+                    if (event.key === "Enter") {
+                        event.currentTarget.blur();
+                    } else if (event.key === "Escape") {
+                        event.currentTarget.value = props.presentation.name;
+                        event.currentTarget.blur();
+                    }
+                }}
             />
             <Button
                 text="Добавить слайд"

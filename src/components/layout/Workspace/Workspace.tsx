@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Slide } from "../../../types/slide";
 import styles from "./Workspace.module.css";
 import { SlideView } from "../../slides/SlideView/SlideView";
@@ -14,6 +15,7 @@ type WorkspaceProps = {
 }
 
 function Workspace(props: WorkspaceProps) {
+    const workspaceRef = useRef<HTMLDivElement>(null);
     if (props.previewSlide === undefined) {
         return (
             <div className={styles.workspace}>
@@ -24,8 +26,9 @@ function Workspace(props: WorkspaceProps) {
         );
     }
     return (
-        <div className={styles.workspace} >
+        <div ref={workspaceRef} className={styles.workspace}>
             <SlideView 
+                workspaceRef={workspaceRef}
                 slide={props.previewSlide} 
                 setPreviewSlide={props.setPreviewSlide}
                 preview={true}

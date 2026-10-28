@@ -19,3 +19,11 @@
     position: relative;
 }
 
+.slideThumbnail,
+.slideView {
+    overflow: hidden;
+}
+
+.slideWorkspacePreview {
+    overflow: visible;
+}

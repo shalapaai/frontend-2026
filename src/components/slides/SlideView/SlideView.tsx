@@ -1,9 +1,12 @@
+import { useRef } from "react";
+import type { RefObject } from "react";
 import { Slide } from "../../../types/slide";
 import { MenuState } from "../../layout/EditorContainer/EditorContainer";
 import { SlideObject } from "../SlideObject/SlideObject";
 import styles from "./SlideView.module.css";
 
 type SlideViewProps = {
+    workspaceRef?: RefObject<HTMLDivElement | null>;
     slide: Slide,
     preview: boolean,
     setPreviewSlide?: (slide: Slide) => void,
@@ -16,6 +19,7 @@ type SlideViewProps = {
 }
 
 function SlideView(props: SlideViewProps) {
+    const slideRef = useRef<HTMLDivElement>(null);
     const handleContextMenu = (e: React.MouseEvent, objectId: string) => {
         if (!props.setMenuState) return;
         e.preventDefault(); 
@@ -51,6 +55,7 @@ function SlideView(props: SlideViewProps) {
     };
     return (
         <div
+            ref={slideRef}
             className={styles[props.className]}
             style={{
                 background: props.slide.background.type === "solid" 
@@ -64,6 +69,8 @@ function SlideView(props: SlideViewProps) {
                     onContextMenu={(e) => handleContextMenu(e, object.id)}
                 >
                     <SlideObject
+                        workspaceRef={props.workspaceRef}
+                        slideRef={slideRef}
                         slide={props.slide}
                         object={object}
                         preview={props.preview}

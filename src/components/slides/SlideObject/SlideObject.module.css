@@ -6,6 +6,7 @@
 .objectFramePreview {
     box-shadow: inset 0 0 0 1px #c4c7c5;
     outline: none;
+    touch-action: none;
 }
 
 .objectFramePreview:hover {
@@ -21,7 +22,12 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
+    padding: 0;
+    resize: none;
+    overflow-wrap: anywhere;
+    text-align: left;
     background: transparent;
     border: none;
     outline: none;
+    overflow: hidden;
 }

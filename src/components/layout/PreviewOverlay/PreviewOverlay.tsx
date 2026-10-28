@@ -51,7 +51,22 @@ function PreviewOverlay(props: PreviewOverlayProps) {
         };
     }, [props.activeSlideId, props.onClose]);
     return (
-        <div className={styles.previewOverlay} onClick={props.onClose}>
+        <div 
+            className={styles.previewOverlay} 
+            onClick={() => {
+                const currentIndex = props.presentation.slides.findIndex(
+                    slide => slide.id === props.activeSlideId
+                );
+
+                if (currentIndex === -1) return;
+
+                const nextSlide = props.presentation.slides[currentIndex + 1];
+
+                if (nextSlide) {
+                    props.setActiveSlideId(nextSlide.id);
+                }
+            }}
+        >
             <div
                 className={styles.slideContainer}
                 style={{

@@ -11,9 +11,9 @@ type TextInputProps = {
 }
 
 function TextInput(props: TextInputProps) {
-    const handleSubmit = (e: FocusEvent<HTMLInputElement> | KeyboardEvent<HTMLInputElement>) => {
+    const handleSubmit = (e: FocusEvent<HTMLTextAreaElement> | KeyboardEvent<HTMLTextAreaElement>) => {
         const inputElement = e.currentTarget;
-        const cleanValue = inputElement.value.trim();
+        const cleanValue = inputElement.value;
 
         if (props.validate && !props.validate(cleanValue)) {
             inputElement.value = props.value;
@@ -25,24 +25,19 @@ function TextInput(props: TextInputProps) {
         }
     };
 
-    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            handleSubmit(e);
-            e.currentTarget.blur();
-        }
+    const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Escape') {
             e.currentTarget.value = props.value;
             e.currentTarget.blur();
         }
     };
 
-    const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+    const handleBlur = (event: FocusEvent<HTMLTextAreaElement>) => {
         handleSubmit(event);
     };
 
     return (
-        <input
-            type="text"
+        <textarea
             defaultValue={props.value}
             key={props.value} 
             placeholder={props.placeholder}
