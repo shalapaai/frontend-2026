@@ -45,3 +45,11 @@
     border: 1px solid #0b57d0;
     cursor: nwse-resize;
 }
+
+.objectImage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+}

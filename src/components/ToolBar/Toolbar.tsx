@@ -6,6 +6,7 @@ import { addSlide } from "../../functions/slide";
 import { addObject } from "../../functions/objects";
 import { setSlideBackgroundColor } from "../../functions/background";
 import { deepClone } from "../../functions/utils";
+import { ChangeEvent, useCallback, useRef } from "react";
 
 type ToolbarProps = {
     presentation: Presentation,
@@ -17,6 +18,49 @@ type ToolbarProps = {
 
 function Toolbar(props: ToolbarProps) {
     const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>) => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = "";
+
+            if (!file || !file.type.startsWith("image/")) return;
+
+            const slideId = props.activeSlideId;
+            if (!slideId) return;
+
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                const src = reader.result;
+                if (typeof src !== "string") return;
+
+                const newPresentation = deepClone(props.presentation);
+                newPresentation.slides = newPresentation.slides.map(slide =>
+                    slide.id === slideId
+                        ? addObject(slide, {
+                            type: "image",
+                            src,
+                            x: 200,
+                            y: 150,
+                            width: 300,
+                            height: 200,
+                        })
+                        : slide
+                );
+
+                props.setPresentation(newPresentation);
+            };
+
+            reader.onerror = () => {
+                alert("Не удалось прочитать изображение");
+            };
+
+            reader.readAsDataURL(file);
+        },
+        [props.activeSlideId, props.setPresentation],
+    );
     return (
         <div className={styles.toolbar}>
             <input
@@ -88,8 +132,23 @@ function Toolbar(props: ToolbarProps) {
             <Button
                 text="Добавить изображение"
                 className={styles.toolbarButton}
-                onClick={() => console.log("Добавить изображение")}
+                onClick={() => {
+                    if (!activeSlide) {
+                        alert("Нет активного слайда");
+                        return;
+                    }
+
+                    imageInputRef.current?.click();
+                }}
             />
+            <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleImageChange}
+            />
+            
             <Button
                 text="Изменить фон слайда"
                 className={styles.toolbarButton}

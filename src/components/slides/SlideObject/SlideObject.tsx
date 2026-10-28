@@ -48,39 +48,39 @@ function SlideObject(props: SlideObjectProps) {
             );
         },
     });
-    if (props.object.type === "text") {
-        return (
-            <div
-                {...dragHandlers}
-                tabIndex={props.preview ? -1 : undefined}
-                className={[
-                    styles.objectFrame,
-                    props.preview ? styles.objectFramePreview : "",
-                    isSelected ? styles.objectFrameSelected : "",
-                ].join(" ")}
-                style={{
-                    left: position.x - 5,
-                    top: position.y - 5,
-                    width: size.width,
-                    height: size.height,
-                    boxSizing: "content-box",
-                    pointerEvents: props.preview ? "auto" : "none",
-                }}
-                onClick={event => {
-                    if (!props.preview) return;
-                    event.stopPropagation();
-                    if (event.target !== event.currentTarget) {
-                        props.onSelect?.(props.object.id, false);
-                        return;
-                    }
+    return (
+        <div
+            {...dragHandlers}
+            tabIndex={props.preview ? -1 : undefined}
+            className={[
+                styles.objectFrame,
+                props.preview ? styles.objectFramePreview : "",
+                isSelected ? styles.objectFrameSelected : "",
+            ].join(" ")}
+            style={{
+                left: position.x - 5,
+                top: position.y - 5,
+                width: size.width,
+                height: size.height,
+                boxSizing: "content-box",
+                pointerEvents: props.preview ? "auto" : "none",
+            }}
+            onClick={event => {
+                if (!props.preview) return;
+                event.stopPropagation();
+                if (event.target !== event.currentTarget) {
+                    props.onSelect?.(props.object.id, false);
+                    return;
+                }
 
-                    event.currentTarget.focus();
-                    props.onSelect?.(
-                        props.object.id,
-                        event.ctrlKey || event.metaKey
-                    );
-                }}
-            >
+                event.currentTarget.focus();
+                props.onSelect?.(
+                    props.object.id,
+                    event.ctrlKey || event.metaKey
+                );
+            }}
+        >
+            {props.object.type === "text" ? (
                 <TextInput 
                     className={styles.objectInput}
                     value={props.object.text}
@@ -97,16 +97,20 @@ function SlideObject(props: SlideObjectProps) {
                     }}
                     readOnly={!props.preview}
                 />
-                {props.preview && isSelected && (
-                    <div className={styles.resizeHandle} {...resizeHandlers} />
-                )}
-            </div>
-        )
-    } else if (props.object.type === "image") {
-        return (
-            <></>
-        )
-    }
+            ) : (
+                <img
+                    src={props.object.src}
+                    alt=""
+                    draggable={false}
+                    className={styles.objectImage}
+                />
+            )}
+            
+            {props.preview && isSelected && (
+                <div className={styles.resizeHandle} {...resizeHandlers} />
+            )}
+        </div>
+    )
 }
 
 export {

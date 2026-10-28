@@ -53,7 +53,7 @@ function useObjectDrag({ x, y, width, height, workspaceRef, slideRef, enabled, o
         suppressClickRef.current = false;
 
         if (!enabled || event.button !== 0 || !event.isPrimary) return;
-        if (event.target !== event.currentTarget) return;
+        if (event.target !== event.currentTarget && !(event.target instanceof HTMLImageElement)) return;
         if (event.ctrlKey || event.metaKey || dragRef.current) return;
 
         const frame = event.currentTarget;
