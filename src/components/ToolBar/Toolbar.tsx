@@ -1,3 +1,4 @@
+import { usePdfExport } from "../hooks/usePdfExport";
 import { updatePresentationName } from "../../functions/presentation";
 import { Presentation } from "../../types/presentation";
 import { Button } from "../ui/Button/Button";
@@ -17,6 +18,7 @@ type ToolbarProps = {
 }
 
 function Toolbar(props: ToolbarProps) {
+    const { exportToPdf, isExporting } = usePdfExport();
     const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,6 +183,15 @@ function Toolbar(props: ToolbarProps) {
                 }}
                 value={activeSlide && activeSlide.background.type === "solid" ? activeSlide.background.color : "#ffffff"}
                 className={styles.hiddenColorInput}
+            />
+            <Button
+                text={isExporting ? "Экспорт…" : "Экспорт PDF"}
+                className={styles.toolbarButton}
+                onClick={() => {
+                    void exportToPdf(props.presentation).catch(error => {
+                        alert(error instanceof Error ? error.message : "Не удалось экспортировать PDF");
+                    });
+                }}
             />
             <Button
                 text="Сохранить"
