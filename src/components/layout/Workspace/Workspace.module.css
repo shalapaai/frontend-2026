@@ -1,7 +1,7 @@
 .workspace {
     background: #f8fafd;
     width: calc(100vw - 220px);
-    height: calc(100vh - 75px);
+    height: calc(100vh - 75px - 56px);
     display: flex;
     align-items: center;
     justify-content: center;

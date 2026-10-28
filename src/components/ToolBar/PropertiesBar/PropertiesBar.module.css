@@ -1,0 +1,24 @@
+.bar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 24px;
+    background: #f8fafd;
+    border: 1px solid #c4c7c5;
+    position: relative;
+    z-index: 100;
+}
+
+.button {
+    height: 28px;
+    padding: 1px 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.button:hover {
+    background: #0000000d;
+}

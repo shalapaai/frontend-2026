@@ -1,0 +1,36 @@
+.panel {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 12px;
+}
+
+.panel label,
+.sizeControl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sizeControl input {
+    width: 64px;
+}
+
+.colorControl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+}
+
+
+
+.colorInput {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}

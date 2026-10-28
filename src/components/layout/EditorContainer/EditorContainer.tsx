@@ -40,7 +40,7 @@ function EditorContainer(props: EditorContainerProps) {
     const [selectedSlideIds, setSelectedSlideIds] = useState<string[]>(
         props.activeSlideId ? [props.activeSlideId] : []
     );
-    const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
+    const { selectedObjectIds, setSelectedObjectIds } = props;
     const [selectionTarget, setSelectionTarget] = useState<
         "slides" | "objects"
     >("slides");

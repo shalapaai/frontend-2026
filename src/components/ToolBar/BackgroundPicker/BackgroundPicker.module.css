@@ -21,7 +21,7 @@
 .backgroundPanel {
     position: absolute;
     top: calc(100% + 12px);
-    right: 0;
+    left: 0;
     z-index: 100;
     width: 280px;
     display: flex;
