@@ -31,3 +31,17 @@
     outline: none;
     overflow: hidden;
 }
+
+.resizeHandle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    transform: translate(30%, 30%);
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #0b57d0;
+    cursor: nwse-resize;
+}

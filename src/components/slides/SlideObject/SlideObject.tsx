@@ -1,3 +1,4 @@
+import { useObjectResize } from "../../hooks/useObjectResize";
 import type { RefObject } from "react";
 import { SlideObject } from "../../../types/objects";
 import styles from "./SlideObject.module.css";
@@ -33,6 +34,20 @@ function SlideObject(props: SlideObjectProps) {
             );
         },
     });
+    const { size, resizeHandlers } = useObjectResize({
+        x: props.object.x,
+        y: props.object.y,
+        workspaceRef: props.workspaceRef,
+        width: props.object.width,
+        height: props.object.height,
+        enabled: props.preview === true && isSelected,
+        slideRef: props.slideRef,
+        onResizeEnd: ({ width, height }) => {
+            props.setPreviewSlide?.(
+                updateObject(props.slide, props.object.id, { width, height })
+            );
+        },
+    });
     if (props.object.type === "text") {
         return (
             <div
@@ -46,8 +61,8 @@ function SlideObject(props: SlideObjectProps) {
                 style={{
                     left: position.x - 5,
                     top: position.y - 5,
-                    width: props.object.width,
-                    height: props.object.height,
+                    width: size.width,
+                    height: size.height,
                     boxSizing: "content-box",
                     pointerEvents: props.preview ? "auto" : "none",
                 }}
@@ -82,6 +97,9 @@ function SlideObject(props: SlideObjectProps) {
                     }}
                     readOnly={!props.preview}
                 />
+                {props.preview && isSelected && (
+                    <div className={styles.resizeHandle} {...resizeHandlers} />
+                )}
             </div>
         )
     } else if (props.object.type === "image") {
