@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import type { SlideObject } from "../../types/objects";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent, RefObject } from "react";
 
 type Size = { 
@@ -6,9 +7,8 @@ type Size = {
     height: number 
 };
 
-type Options = Size & {
-    x: number,
-    y: number,
+type Options = {
+    object: SlideObject,
     workspaceRef?: RefObject<HTMLDivElement | null>,
     enabled: boolean,
     slideRef: RefObject<HTMLDivElement | null>,
@@ -18,32 +18,26 @@ type Options = Size & {
 type ResizeState = Size & {
     startX: number;
     startY: number;
-    scaleX: number;
-    scaleY: number;
-    minWidth: number;
-    minHeight: number;
-    maxWidth: number;
-    maxHeight: number;
-    current: Size;
+    scale: number;
     moved: boolean;
 };
 
-function useObjectResize({ x, y, width, height, enabled, workspaceRef, slideRef, onResizeEnd }: Options) {
+function useObjectResize({ object, enabled, workspaceRef, slideRef, onResizeEnd }: Options) {
+    const { x, y, width, height } = object;
     const resizeRef = useRef<ResizeState | null>(null);
     const [size, setSize] = useState<Size | null>(null);
+    
+    const getSize = useCallback((event: globalThis.MouseEvent, resize: ResizeState): Size => ({
+        width: Math.max(30, resize.width + (event.clientX - resize.startX) / resize.scale),
+        height: Math.max(30, resize.height + (event.clientY - resize.startY) / resize.scale),
+    }), []);
 
     useEffect(() => {
-        const getSize = (event: globalThis.MouseEvent, resize: ResizeState): Size => ({
-            width: Math.max(resize.minWidth, Math.min(resize.maxWidth, resize.width + (event.clientX - resize.startX) / resize.scaleX)),
-            height: Math.max(resize.minHeight, Math.min(resize.maxHeight, resize.height + (event.clientY - resize.startY) / resize.scaleY)),
-        });
-
         const handleMove = (event: globalThis.MouseEvent) => {
             const resize = resizeRef.current;
             if (!resize) return;
             resize.moved = true;
-            resize.current = getSize(event, resize);
-            setSize(resize.current);
+            setSize(getSize(event, resize));
         };
 
         const handleUp = (event: globalThis.MouseEvent) => {
@@ -51,7 +45,27 @@ function useObjectResize({ x, y, width, height, enabled, workspaceRef, slideRef,
             if (!resize || event.button !== 0) return;
             resizeRef.current = null;
             setSize(null);
-            if (resize.moved) onResizeEnd(getSize(event, resize));
+            if (!resize.moved) return;
+
+            const nextSize = getSize(event, resize);
+            const workspace = workspaceRef?.current;
+            const slide = slideRef.current;
+            if (!workspace || !slide) return;
+
+            const workspaceRect = workspace.getBoundingClientRect();
+            const slideRect = slide.getBoundingClientRect();
+            const left = slideRect.left + x * resize.scale;
+            const top = slideRect.top + y * resize.scale;
+            const workspaceLeft = workspaceRect.left + workspace.clientLeft;
+            const workspaceTop = workspaceRect.top + workspace.clientTop;
+
+            if (left < workspaceLeft || top < workspaceTop ||
+                left + nextSize.width * resize.scale > workspaceLeft + workspace.clientWidth ||
+                top + nextSize.height * resize.scale > workspaceTop + workspace.clientHeight) return;
+
+            if (nextSize.width !== resize.width || nextSize.height !== resize.height) {
+                onResizeEnd(nextSize);
+            }
         };
 
         const cancel = () => {
@@ -67,29 +81,16 @@ function useObjectResize({ x, y, width, height, enabled, workspaceRef, slideRef,
             window.removeEventListener("mouseup", handleUp);
             window.removeEventListener("blur", cancel);
         };
-    }, [onResizeEnd]);
+    }, [getSize, onResizeEnd, workspaceRef, slideRef, x, y]);
 
     const onMouseDown = (event: MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
         if (!enabled || event.button !== 0) return;
         const slide = slideRef.current;
         if (!slide || !slide.offsetWidth || !slide.offsetHeight) return;
-        const rect = slide.getBoundingClientRect();
-        const scaleX = rect.width / slide.offsetWidth;
-        const scaleY = rect.height / slide.offsetHeight;
-        if (scaleX <= 0 || scaleY <= 0) return;
-
-        const workspace = workspaceRef?.current;
-        if (!workspace) return;
-        const workspaceRect = workspace.getBoundingClientRect();
-        const left = workspaceRect.left + workspace.clientLeft;
-        const top = workspaceRect.top + workspace.clientTop;
-        const right = left + workspace.clientWidth;
-        const bottom = top + workspace.clientHeight;
-        const minWidth = Math.max(30, 2 * ((left - rect.left) / scaleX - x));
-        const minHeight = Math.max(30, 2 * ((top - rect.top) / scaleY - y));
-        const maxWidth = Math.max(minWidth, (right - rect.left) / scaleX - x);
-        const maxHeight = Math.max(minHeight, (bottom - rect.top) / scaleY - y);
+        if (!workspaceRef?.current) return;
+        const scale = slide.getBoundingClientRect().width / slide.offsetWidth;
+        if (scale <= 0) return;
 
         event.preventDefault();
         event.currentTarget.parentElement?.focus();
@@ -97,10 +98,7 @@ function useObjectResize({ x, y, width, height, enabled, workspaceRef, slideRef,
             width, height,
             startX: event.clientX,
             startY: event.clientY,
-            scaleX, scaleY,
-            minWidth, minHeight,
-            maxWidth, maxHeight,
-            current: { width, height },
+            scale,
             moved: false,
         };
     };

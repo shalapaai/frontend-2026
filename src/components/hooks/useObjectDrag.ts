@@ -1,32 +1,23 @@
+import type { SlideObject } from "../../types/objects";
 import { useRef, useState } from "react";
-import type { MouseEvent, PointerEvent, RefObject } from "react";
+import type { PointerEvent, RefObject } from "react";
 
 type Position = {
     x: number;
     y: number;
 };
 
-type Bounds = {
-    minX: number;
-    maxX: number;
-    minY: number;
-    maxY: number;
-};
-
 type DragState = {
-    bounds: Bounds;
     pointerId: number;
     startX: number;
     startY: number;
     origin: Position;
-    scaleX: number;
-    scaleY: number;
+    scale: number;
     moved: boolean;
 };
 
-type Options = Position & {
-    width: number;
-    height: number;
+type Options = {
+    object: SlideObject;
     workspaceRef?: RefObject<HTMLDivElement | null>;
     slideRef: RefObject<HTMLDivElement | null>;
     enabled: boolean;
@@ -34,24 +25,17 @@ type Options = Position & {
 };
 
 // добавить возможность перетаскивания нескольких объектов
-function useObjectDrag({ x, y, width, height, workspaceRef, slideRef, enabled, onDragEnd }: Options) {
+function useObjectDrag({ object, workspaceRef, slideRef, enabled, onDragEnd }: Options) {
+    const { x, y, width, height } = object;
     const [dragPosition, setDragPosition] = useState<Position | null>(null);
     const dragRef = useRef<DragState | null>(null);
-    const suppressClickRef = useRef(false);
 
-    const getPosition = (event: PointerEvent<HTMLDivElement>, drag: DragState): Position => {
-        const nextX = drag.origin.x + (event.clientX - drag.startX) / drag.scaleX;
-        const nextY = drag.origin.y + (event.clientY - drag.startY) / drag.scaleY;
-
-        return {
-            x: Math.max(drag.bounds.minX, Math.min(drag.bounds.maxX, nextX)),
-            y: Math.max(drag.bounds.minY, Math.min(drag.bounds.maxY, nextY)),
-        };
-    };
+    const getPosition = (event: PointerEvent<HTMLDivElement>, drag: DragState): Position => ({
+        x: drag.origin.x + (event.clientX - drag.startX) / drag.scale,
+        y: drag.origin.y + (event.clientY - drag.startY) / drag.scale,
+    });
 
     const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-        suppressClickRef.current = false;
-
         if (!enabled || event.button !== 0 || !event.isPrimary) return;
         if (event.target !== event.currentTarget && !(event.target instanceof HTMLImageElement)) return;
         if (event.ctrlKey || event.metaKey || dragRef.current) return;
@@ -61,22 +45,8 @@ function useObjectDrag({ x, y, width, height, workspaceRef, slideRef, enabled, o
         const slide = slideRef.current;
         if (!workspace || !slide || !slide.offsetWidth || !slide.offsetHeight) return;
 
-        const workspaceRect = workspace.getBoundingClientRect();
-        const slideRect = slide.getBoundingClientRect();
-        const scaleX = slideRect.width / slide.offsetWidth;
-        const scaleY = slideRect.height / slide.offsetHeight;
-        if (scaleX <= 0 || scaleY <= 0) return;
-
-        const left = workspaceRect.left + workspace.clientLeft;
-        const top = workspaceRect.top + workspace.clientTop;
-        const bounds: Bounds = {
-            minX: (left - slideRect.left) / scaleX - width / 2,
-            maxX: (left + workspace.clientWidth - slideRect.left) / scaleX - width / 2,
-            minY: (top - slideRect.top) / scaleY - height / 2,
-            maxY: (top + workspace.clientHeight - slideRect.top) / scaleY - height / 2,
-        };
-
-        if (!frame.offsetWidth || !frame.offsetHeight) return;
+        const scale = slide.getBoundingClientRect().width / slide.offsetWidth;
+        if (scale <= 0) return;
 
         event.preventDefault();
         event.stopPropagation();
@@ -87,9 +57,7 @@ function useObjectDrag({ x, y, width, height, workspaceRef, slideRef, enabled, o
             startX: event.clientX,
             startY: event.clientY,
             origin: { x, y },
-            scaleX,
-            scaleY,
-            bounds,
+            scale,
             moved: false,
         };
 
@@ -118,14 +86,30 @@ function useObjectDrag({ x, y, width, height, workspaceRef, slideRef, enabled, o
         const nextPosition = getPosition(event, drag);
 
         dragRef.current = null;
-        suppressClickRef.current = drag.moved;
         setDragPosition(null);
 
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
             event.currentTarget.releasePointerCapture(event.pointerId);
         }
 
-        if (drag.moved) {
+        if (!drag.moved) return;
+
+        const workspace = workspaceRef?.current;
+        const slide = slideRef.current;
+        if (!workspace || !slide) return;
+
+        const workspaceRect = workspace.getBoundingClientRect();
+        const slideRect = slide.getBoundingClientRect();
+        const left = slideRect.left + nextPosition.x * drag.scale;
+        const top = slideRect.top + nextPosition.y * drag.scale;
+        const workspaceLeft = workspaceRect.left + workspace.clientLeft;
+        const workspaceTop = workspaceRect.top + workspace.clientTop;
+
+        if (left < workspaceLeft || top < workspaceTop ||
+            left + width * drag.scale > workspaceLeft + workspace.clientWidth ||
+            top + height * drag.scale > workspaceTop + workspace.clientHeight) return;
+
+        if (nextPosition.x !== drag.origin.x || nextPosition.y !== drag.origin.y) {
             onDragEnd(nextPosition);
         }
     };
@@ -135,7 +119,6 @@ function useObjectDrag({ x, y, width, height, workspaceRef, slideRef, enabled, o
         if (!drag || drag.pointerId !== event.pointerId) return;
 
         dragRef.current = null;
-        suppressClickRef.current = drag.moved;
         setDragPosition(null);
     };
 

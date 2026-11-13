@@ -1,3 +1,4 @@
+import { updateSlide } from "../../../functions/slide";
 import { useCallback, useRef } from "react";
 import type { ChangeEvent } from "react";
 import { Button } from "../../ui/Button/Button";
@@ -40,21 +41,16 @@ function PropertiesBar(props: PropertiesBarProps) {
                 const src = reader.result;
                 if (typeof src !== "string") return;
 
-                setPresentation(previous => ({
-                    ...previous,
-                    slides: previous.slides.map(slide =>
-                        slide.id === slideId
-                            ? addObject(slide, {
-                                type: "image",
-                                src,
-                                x: 200,
-                                y: 150,
-                                width: 300,
-                                height: 200,
-                            })
-                            : slide
-                    ),
-                }));
+                setPresentation(previous => updateSlide(previous, slideId, slide =>
+                    addObject(slide, {
+                        type: "image",
+                        src,
+                        x: 200,
+                        y: 150,
+                        width: 300,
+                        height: 200,
+                    })
+                ));
             };
 
             reader.onerror = () => {
@@ -132,11 +128,9 @@ function PropertiesBar(props: PropertiesBarProps) {
                     onChange={style => {
                         const slideId = activeSlide.id;
                         const objectId = selectedObject.id;
-                        setPresentation(previous => ({
-                            ...previous,
-                            slides: previous.slides.map(slide => slide.id === slideId
-                                ? updateObject(slide, objectId, style) : slide),
-                        }));
+                        setPresentation(previous => updateSlide(previous, slideId, slide =>
+                            updateObject(slide, objectId, style)
+                        ));
                     }}
                 />
             )}

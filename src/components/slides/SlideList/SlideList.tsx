@@ -1,9 +1,7 @@
 import { Presentation } from "../../../types/presentation";
 import styles from "./SlideList.module.css";
 import { SlideView } from "../SlideView/SlideView";
-import { useEffect, useState } from "react";
-import { ContextMenu } from "../../ContextMenu/ContextMenu";
-import { removeSlides } from "../../../functions/slide";
+import { useEffect } from "react";
 import { MenuState } from "../../layout/EditorContainer/EditorContainer";
 
 type SlideListProps = {

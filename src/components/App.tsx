@@ -7,7 +7,7 @@ import { createTestPresentation } from "../data";
 
 export function App() {
     const {
-        presentation, setPresentation, undo, redo, canUndo, canRedo, historyRevision,
+        presentation, setPresentation, undo, redo, canUndo, canRedo,
     } = usePresentationHistory(createTestPresentation);
     const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
     const [previewMode, setPreviewMode] = useState(false);
@@ -51,7 +51,6 @@ export function App() {
             onClose={() => setPreviewMode(false)}
         />;
     }
-    console.log(presentation);
     return (
         <>
             <Toolbar
@@ -63,7 +62,6 @@ export function App() {
                 activeSlideId={activeSlideId}
             />
             <EditorContainer
-                key={historyRevision}
                 selectedObjectIds={selectedObjectIds}
                 setSelectedObjectIds={setSelectedObjectIds}
                 presentation={presentation} 

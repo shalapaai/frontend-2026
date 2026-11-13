@@ -15,15 +15,11 @@ const fonts = ["Arial", "Times New Roman", "Verdana"];
 
 function TextStylePanel({ object, onChange }: TextStylePanelProps) {
     const colorInputRef = useRef<HTMLInputElement>(null);
-    const [fontFamily, setFontFamily] = useState(object.fontFamily);
     const [fontSize, setFontSize] = useState(String(object.fontSize));
-    const [fontColor, setFontColor] = useState(object.fontColor);
 
     useEffect(() => {
-        setFontFamily(object.fontFamily);
         setFontSize(String(object.fontSize));
-        setFontColor(object.fontColor);
-    }, [object.id, object.fontFamily, object.fontSize, object.fontColor]);
+    }, [object.id, object.fontSize]);
 
     const changeSize = (value: string) => {
         setFontSize(value);
@@ -42,10 +38,9 @@ function TextStylePanel({ object, onChange }: TextStylePanelProps) {
             <label>
                 <select
                     aria-label="Шрифт"
-                    value={fontFamily}
+                    value={object.fontFamily}
                     onChange={event => {
                         const value = event.currentTarget.value;
-                        setFontFamily(value);
                         onChange({ fontFamily: value });
                     }}
                 >
@@ -82,10 +77,9 @@ function TextStylePanel({ object, onChange }: TextStylePanelProps) {
                     type="color"
                     aria-label="Цвет текста"
                     tabIndex={-1}
-                    value={fontColor}
+                    value={object.fontColor}
                     onChange={event => {
                         const value = event.currentTarget.value;
-                        setFontColor(value);
                         onChange({ fontColor: value });
                     }}
                 />

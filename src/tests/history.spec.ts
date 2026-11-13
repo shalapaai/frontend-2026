@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { recordHistory, undoHistory, redoHistory } from "../functions/history";
 import type { History } from "../functions/history";
 
-const initial = (): History<number> => ({ past: [], present: 0, future: [], revision: 0 });
+const initial = (): History<number> => ({ past: [], present: 0, future: [] });
 
 describe("presentation history", () => {
     it("restores multiple edits in both directions", () => {

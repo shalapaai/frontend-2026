@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Slide } from "../../../types/slide";
 import { ContextMenu } from "../../ContextMenu/ContextMenu";
 import { removeSlides } from "../../../functions/slide";
-import { deepClone } from "../../../functions/utils";
+import { updateSlide } from "../../../functions/slide";
 
 type EditorContainerProps = {
     presentation: Presentation,
@@ -49,12 +49,7 @@ function EditorContainer(props: EditorContainerProps) {
 
     const handleSlideChange = (updatedSlide: Slide) => {
         setPreviewSlide(updatedSlide);
-
-        const newPresentation = deepClone(props.presentation);
-        newPresentation.slides = newPresentation.slides.map(slide =>
-            slide.id === updatedSlide.id ? updatedSlide : slide
-        );
-        props.setPresentation(newPresentation);
+        props.setPresentation(updateSlide(props.presentation, updatedSlide.id, () => updatedSlide));
     };
 
     const clearSelection = () => {
@@ -86,10 +81,10 @@ function EditorContainer(props: EditorContainerProps) {
         );
         if (!slide) return;
 
-        handleSlideChange({
-            ...slide,
-            objects: slide.objects.filter(object => !ids.includes(object.id)),
-        });
+        const objects = slide.objects.filter(object => !ids.includes(object.id));
+        if (objects.length !== slide.objects.length) {
+            handleSlideChange({ ...slide, objects });
+        }
 
         setSelectedObjectIds([]);
     };
@@ -165,7 +160,11 @@ function EditorContainer(props: EditorContainerProps) {
     return (
         <div 
             className={styles.twoPanelsLayout}
-            onClick={clearSelection}
+            onClick={event => {
+                if (event.defaultPrevented) return;
+                if (event.target instanceof Element && event.target.closest("[data-slide-object]")) return;
+                clearSelection();
+            }}
         >
             <SlideList 
                 presentation={props.presentation} 

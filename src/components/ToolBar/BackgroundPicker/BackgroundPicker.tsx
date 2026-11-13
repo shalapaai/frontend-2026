@@ -1,3 +1,4 @@
+import { updateSlide } from "../../../functions/slide";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import type { Presentation } from "../../../types/presentation";
@@ -20,21 +21,20 @@ function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProp
     const activeSlideId = activeSlide.id;
     const [backgroundType, setBackgroundType] = useState(activeSlide.background.type);
     const backgroundInputRef = useRef<HTMLInputElement>(null);
-    const [backgroundPanelSlideId, setBackgroundPanelSlideId] = useState<string | null>(null);
-    const isOpen = backgroundPanelSlideId === activeSlideId;
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
         const handlePointerDown = (event: PointerEvent) => {
             if (event.target instanceof Node && !controlRef.current?.contains(event.target)) {
-                setBackgroundPanelSlideId(null);
+                setIsOpen(false);
             }
         };
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key !== "Escape") return;
             event.preventDefault();
             event.stopPropagation();
-            setBackgroundPanelSlideId(null);
+            setIsOpen(false);
             controlRef.current?.querySelector("button")?.focus();
         };
 
@@ -51,10 +51,7 @@ function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProp
 
     const changeBackground = (update: (slide: Slide) => Slide) => {
         const slideId = activeSlide.id;
-        setPresentation(previous => ({
-            ...previous,
-            slides: previous.slides.map(slide => slide.id === slideId ? update(slide) : slide),
-        }));
+        setPresentation(previous => updateSlide(previous, slideId, update));
     };
 
     const changeGradient = (
@@ -72,11 +69,9 @@ function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProp
         reader.onload = () => {
             const src = reader.result;
             if (typeof src !== "string") return;
-            setPresentation(previous => ({
-                ...previous,
-                slides: previous.slides.map(slide => slide.id === slideId
-                    ? setSlideBackgroundImage(slide, src) : slide),
-            }));
+            setPresentation(previous => updateSlide(previous, slideId, slide =>
+                setSlideBackgroundImage(slide, src)
+            ));
         };
         reader.onerror = () => alert("Не удалось прочитать фоновое изображение");
         reader.readAsDataURL(file);
@@ -92,14 +87,12 @@ function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProp
         <button
             type="button"
             className={styles.toolbarButton}
-            aria-expanded={backgroundPanelSlideId === activeSlide.id}
-            onClick={() => setBackgroundPanelSlideId(previous =>
-                previous === activeSlide.id ? null : activeSlide.id
-            )}
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen(previous => !previous)}
         >
             Изменить фон слайда
         </button>
-        {backgroundPanelSlideId === activeSlide.id && (
+        {isOpen && (
             <div className={styles.backgroundPanel}>
                 <label>
                     Тип фона

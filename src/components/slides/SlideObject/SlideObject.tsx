@@ -1,5 +1,6 @@
 import { useObjectResize } from "../../hooks/useObjectResize";
-import type { RefObject } from "react";
+import { useCallback } from "react";
+import type { MouseEvent, RefObject } from "react";
 import { SlideObject } from "../../../types/objects";
 import styles from "./SlideObject.module.css";
 import { TextInput } from "../../ui/TextInput/TextInput";
@@ -19,12 +20,27 @@ type SlideObjectProps = {
 }
 
 function SlideObject(props: SlideObjectProps) {
+    const { preview, onSelect, object, slide, setPreviewSlide } = props;
+
+    const handleClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
+        if (!preview) return;
+        if (event.target !== event.currentTarget) {
+            onSelect?.(object.id, false);
+            return;
+        }
+
+        event.preventDefault();
+        event.currentTarget.focus();
+        onSelect?.(object.id, event.ctrlKey || event.metaKey);
+    }, [preview, onSelect, object.id]);
+
+    const handleSubmit = useCallback((text: string) => {
+        setPreviewSlide?.(updateObject(slide, object.id, { text }));
+    }, [setPreviewSlide, slide, object.id]);
+
     const isSelected = props.selectedObjectIds?.includes(props.object.id) ?? false;
     const { position, dragHandlers } = useObjectDrag({
-        x: props.object.x,
-        y: props.object.y,
-        width: props.object.width,
-        height: props.object.height,
+        object: props.object,
         workspaceRef: props.workspaceRef,
         slideRef: props.slideRef,
         enabled: props.preview === true,
@@ -35,11 +51,8 @@ function SlideObject(props: SlideObjectProps) {
         },
     });
     const { size, resizeHandlers } = useObjectResize({
-        x: props.object.x,
-        y: props.object.y,
+        object: props.object,
         workspaceRef: props.workspaceRef,
-        width: props.object.width,
-        height: props.object.height,
         enabled: props.preview === true && isSelected,
         slideRef: props.slideRef,
         onResizeEnd: ({ width, height }) => {
@@ -51,6 +64,7 @@ function SlideObject(props: SlideObjectProps) {
     return (
         <div
             {...dragHandlers}
+            data-slide-object
             tabIndex={props.preview ? -1 : undefined}
             className={[
                 styles.objectFrame,
@@ -65,20 +79,7 @@ function SlideObject(props: SlideObjectProps) {
                 boxSizing: "content-box",
                 pointerEvents: props.preview ? "auto" : "none",
             }}
-            onClick={event => {
-                if (!props.preview) return;
-                event.stopPropagation();
-                if (event.target !== event.currentTarget) {
-                    props.onSelect?.(props.object.id, false);
-                    return;
-                }
-
-                event.currentTarget.focus();
-                props.onSelect?.(
-                    props.object.id,
-                    event.ctrlKey || event.metaKey
-                );
-            }}
+            onClick={handleClick}
         >
             {props.object.type === "text" ? (
                 <TextInput 
@@ -89,12 +90,7 @@ function SlideObject(props: SlideObjectProps) {
                         fontSize: props.object.fontSize,
                         color: props.object.fontColor,
                     }}
-                    onSubmit={(value) => {
-                        if (!props.setPreviewSlide) return;
-                        const updatedSlide = updateObject(props.slide, props.object.id, { text: value });
-                        props.setPreviewSlide(updatedSlide);
-                        console.log(value);
-                    }}
+                    onSubmit={handleSubmit}
                     readOnly={!props.preview}
                 />
             ) : (

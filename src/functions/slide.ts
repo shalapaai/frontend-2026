@@ -65,10 +65,27 @@ function duplicateSlide(presentation: Presentation, slideId: string, index: numb
     return newPresentation;
 }
 
+function updateSlide(
+    presentation: Presentation,
+    slideId: string,
+    update: (slide: Slide) => Slide,
+): Presentation {
+    const index = presentation.slides.findIndex(slide => slide.id === slideId);
+    if (index === -1) return presentation;
+
+    const updatedSlide = update(presentation.slides[index]);
+    if (updatedSlide === presentation.slides[index]) return presentation;
+
+    const slides = [...presentation.slides];
+    slides[index] = updatedSlide;
+    return { ...presentation, slides };
+}
+
 export {
     createDefaultSlide,
     addSlide,
     removeSlides,
     moveSlide,
-    duplicateSlide
+    duplicateSlide,
+    updateSlide,
 }
