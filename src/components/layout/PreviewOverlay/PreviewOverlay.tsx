@@ -1,88 +1,62 @@
-import { Presentation } from "../../../types/presentation";
-import { SlideView } from "../../slides/SlideView/SlideView"
-import styles from './PreviewOverlay.module.css';
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { setActiveSlide, setPreviewMode } from "../../../store/slices/presentationSlice";
+import { SlideView } from "../../slides/SlideView/SlideView";
+import styles from "./PreviewOverlay.module.css";
 
-type PreviewOverlayProps = {
-    presentation: Presentation,
-    activeSlideId: string | null,
-    setActiveSlideId: (s: string | null) => void,
-    onClose: () => void
-}
+function PreviewOverlay() {
+    const dispatch = useAppDispatch();
+    const presentation = useAppSelector(state => state.presentation.presentation);
+    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
 
-function PreviewOverlay(props: PreviewOverlayProps) {
-    const scaleX = window.innerWidth / 1280;
-    const scaleY = window.innerHeight / 720;
-    const scale = Math.min(scaleX, scaleY);
+    const handleClose = useCallback(() => {
+        dispatch(setPreviewMode(false));
+    }, [dispatch]);
 
-    const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
-    if (!activeSlide) return (
-        <div className={styles.previewOverlay} onClick={props.onClose}>
-            <div className={styles.emptyState}>
-                Добавьте слайд
-            </div>
-        </div>
-    );
+    const changeSlide = useCallback((direction: number) => {
+        if (!presentation) return;
+        const currentIndex = presentation.slides.findIndex(slide => slide.id === activeSlideId);
+        if (currentIndex === -1) return;
+        const nextSlide = presentation.slides[currentIndex + direction];
+        if (nextSlide) dispatch(setActiveSlide(nextSlide.id));
+    }, [presentation, activeSlideId, dispatch]);
+
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
-                props.onClose();
-                return;
-            }
-            const currentIndex = props.presentation.slides.findIndex(
-                (slide) => slide.id === props.activeSlideId
-            );
-            if (currentIndex === -1) return;
-
-            if (event.key === "ArrowRight") {
-                if (currentIndex < props.presentation.slides.length - 1) {
-                    props.setActiveSlideId(props.presentation.slides[currentIndex + 1].id);
-                }
-            } 
-            else if (event.key === "ArrowLeft") {
-                if (currentIndex > 0) {
-                    props.setActiveSlideId(props.presentation.slides[currentIndex - 1].id);
-                }
+                event.preventDefault();
+                handleClose();
+            } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                changeSlide(1);
+            } else if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                changeSlide(-1);
             }
         };
         window.addEventListener("keydown", handleKeyDown);
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [props.activeSlideId, props.onClose]);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [handleClose, changeSlide]);
+
+    const activeSlide = presentation?.slides.find(slide => slide.id === activeSlideId);
+    if (!activeSlide) {
+        return (
+            <div className={styles.previewOverlay} onClick={handleClose}>
+                <div className={styles.emptyState}>Добавьте слайд</div>
+            </div>
+        );
+    }
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
     return (
-        <div 
-            className={styles.previewOverlay} 
-            onClick={() => {
-                const currentIndex = props.presentation.slides.findIndex(
-                    slide => slide.id === props.activeSlideId
-                );
-
-                if (currentIndex === -1) return;
-
-                const nextSlide = props.presentation.slides[currentIndex + 1];
-
-                if (nextSlide) {
-                    props.setActiveSlideId(nextSlide.id);
-                }
-            }}
-        >
+        <div className={styles.previewOverlay} onClick={() => changeSlide(1)}>
             <div
                 className={styles.slideContainer}
-                style={{
-                    transform: `scale(${scale})`
-                }}
+                style={{ transform: `scale(${scale})` }}
             >
-                <SlideView 
-                    slide={activeSlide}
-                    preview={false} 
-                    className="slideView"
-                />
+                <SlideView slide={activeSlide} preview={false} className="slideView" />
             </div>
         </div>
-    )
+    );
 }
 
-export {
-    PreviewOverlay
-}
+export { PreviewOverlay };

@@ -1,21 +1,18 @@
 import styles from "./EditorContainer.module.css"
-import { Presentation } from "../../../types/presentation";
 import { SlideList } from "../../slides/SlideList/SlideList";
 import { Workspace } from "../Workspace/Workspace";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Slide } from "../../../types/slide";
 import { ContextMenu } from "../../ContextMenu/ContextMenu";
-import { removeSlides } from "../../../functions/slide";
+import {
+    removeSlides,
+    setPresentation,
+    setActiveSlide,
+    setSelectedObjects,
+    clearSelection as clearObjectSelection,
+} from "../../../store/slices/presentationSlice";
 import { updateSlide } from "../../../functions/slide";
-
-type EditorContainerProps = {
-    presentation: Presentation,
-    setPresentation: (p: Presentation) => void,
-    setActiveSlideId: (s: string | null) => void,
-    activeSlideId: string | null,
-    selectedObjectIds: string[];
-    setSelectedObjectIds: (s: string[]) => void
-}
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 
 type MenuState =
     | {
@@ -33,50 +30,52 @@ type MenuState =
     }
     | null;
 
-function EditorContainer(props: EditorContainerProps) {
-    let activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
-    const [previewSlide, setPreviewSlide] = useState<Slide | undefined>(activeSlide);
+function EditorContainer() {
+    const dispatch = useAppDispatch();
+    const presentation = useAppSelector(state => state.presentation.presentation);
+    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
+    const selectedObjectIds = useAppSelector(state => state.presentation.selectedObjectIds);
     const [menuState, setMenuState] = useState<MenuState>(null);
     const [selectedSlideIds, setSelectedSlideIds] = useState<string[]>(
-        props.activeSlideId ? [props.activeSlideId] : []
+        activeSlideId ? [activeSlideId] : []
     );
-    const { selectedObjectIds, setSelectedObjectIds } = props;
     const [selectionTarget, setSelectionTarget] = useState<
         "slides" | "objects"
     >("slides");
 
-    if (previewSlide !== activeSlide) setPreviewSlide(activeSlide);
+    const setActiveSlideId = useCallback((id: string | null) => {
+        dispatch(setActiveSlide(id));
+    }, [dispatch]);
+
+    const setSelectedObjectIds = useCallback((ids: string[]) => {
+        dispatch(setSelectedObjects(ids));
+    }, [dispatch]);
 
     const handleSlideChange = (updatedSlide: Slide) => {
-        setPreviewSlide(updatedSlide);
-        props.setPresentation(updateSlide(props.presentation, updatedSlide.id, () => updatedSlide));
+        if (!presentation) return;
+        dispatch(setPresentation(updateSlide(presentation, updatedSlide.id, () => updatedSlide)));
     };
 
     const clearSelection = () => {
         setSelectedObjectIds([]);
         setSelectedSlideIds(
-            props.activeSlideId ? [props.activeSlideId] : []
+            activeSlideId ? [activeSlideId] : []
         );
     };
 
     const deleteSlides = (ids: string[]) => {
-        const updatedPresentation = removeSlides(props.presentation, ids);
-        const remainingSlides = updatedPresentation.slides;
+        if (!presentation) return;
+        const remainingSlides = presentation.slides.filter(slide => !ids.includes(slide.id));
+        const nextActiveId = remainingSlides.some(slide => slide.id === activeSlideId)
+            ? activeSlideId : remainingSlides[0]?.id ?? null;
 
-        const nextActiveId = remainingSlides.some(
-            slide => slide.id === props.activeSlideId
-        )
-            ? props.activeSlideId
-            : remainingSlides[0]?.id ?? null;
-
-        props.setPresentation(updatedPresentation);
-        props.setActiveSlideId(nextActiveId);
+        dispatch(removeSlides({ slideIds: ids }));
         setSelectedSlideIds(nextActiveId ? [nextActiveId] : []);
-        setSelectedObjectIds([]);
+        dispatch(clearObjectSelection());
     };
 
     const deleteObjects = (slideId: string, ids: string[]) => {
-        const slide = props.presentation.slides.find(
+        const slide = presentation?.slides.find(
             slide => slide.id === slideId
         );
         if (!slide) return;
@@ -89,40 +88,32 @@ function EditorContainer(props: EditorContainerProps) {
         setSelectedObjectIds([]);
     };
 
+    const isMenuOpen = menuState !== null;
+
     useEffect(() => {
         const handleClickOutside = () => {
             setMenuState(null);
         };
-
-        if (menuState !== null) {
-            window.addEventListener("click", handleClickOutside);
-        }
-
-        return () => {
-            window.removeEventListener("click", handleClickOutside);
-        };
-    }, [menuState !== null]);
+        if (isMenuOpen) window.addEventListener("click", handleClickOutside);
+        return () => window.removeEventListener("click", handleClickOutside);
+    }, [isMenuOpen]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key !== "Delete" || event.defaultPrevented) return;
             const target = event.target;
-            if (
-                target instanceof HTMLElement &&
+            if (target instanceof HTMLElement &&
                 target.closest(
                     'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
                 )
-            ) {
-                return;
-            }
+            ) return;
 
-            if (
-                selectionTarget === "objects" &&
-                props.activeSlideId &&
+            if (selectionTarget === "objects" &&
+                activeSlideId &&
                 selectedObjectIds.length > 0
             ) {
                 event.preventDefault();
-                deleteObjects(props.activeSlideId, selectedObjectIds);
+                deleteObjects(activeSlideId, selectedObjectIds);
             } else if (
                 selectionTarget === "slides" &&
                 selectedSlideIds.length > 0
@@ -145,9 +136,7 @@ function EditorContainer(props: EditorContainerProps) {
             if (event.key !== "Escape") return;
 
             setSelectedObjectIds([]);
-            setSelectedSlideIds(
-                props.activeSlideId ? [props.activeSlideId] : []
-            );
+            setSelectedSlideIds(activeSlideId ? [activeSlideId] : []);
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -155,7 +144,9 @@ function EditorContainer(props: EditorContainerProps) {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [props.activeSlideId]);
+    }, [activeSlideId, setSelectedObjectIds]);
+
+    if (!presentation) return null;
 
     return (
         <div 
@@ -167,23 +158,13 @@ function EditorContainer(props: EditorContainerProps) {
             }}
         >
             <SlideList 
-                presentation={props.presentation} 
-                setPresentation={props.setPresentation}
-                setActiveSlideId={props.setActiveSlideId}
-                activeSlideId={props.activeSlideId}
                 setMenuState={setMenuState}
                 selectedSlideIds={selectedSlideIds}
                 setSelectedSlideIds={setSelectedSlideIds}
-                setSelectedObjectIds={setSelectedObjectIds}
                 setSelectionTarget={setSelectionTarget}
             />
             <Workspace 
-                previewSlide={previewSlide}
-                setPreviewSlide={handleSlideChange}
                 setMenuState={setMenuState}
-                selectedObjectIds={selectedObjectIds}
-                setSelectedSlideIds={setSelectedSlideIds}
-                setSelectedObjectIds={setSelectedObjectIds}
                 setSelectionTarget={setSelectionTarget}
             />
             {menuState !== null && (
@@ -198,16 +179,13 @@ function EditorContainer(props: EditorContainerProps) {
                             const ids = selectedSlideIds.includes(menuState.slideId)
                                 ? selectedSlideIds
                                 : [menuState.slideId];
-
                             deleteSlides(ids);
                         } else {
                             const ids = selectedObjectIds.includes(menuState.objectId)
                                 ? selectedObjectIds
                                 : [menuState.objectId];
-
                             deleteObjects(menuState.slideId, ids);
                         }
-
                         setMenuState(null);
                     }}
                 />

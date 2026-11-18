@@ -4,23 +4,22 @@ import type { MouseEvent, RefObject } from "react";
 import { SlideObject } from "../../../types/objects";
 import styles from "./SlideObject.module.css";
 import { TextInput } from "../../ui/TextInput/TextInput";
-import { updateObject } from "../../../functions/objects";
-import { Slide } from "../../../types/slide";
+import { updateObject } from "../../../store/slices/presentationSlice";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { useObjectDrag } from "../../hooks/useObjectDrag";
 
 type SlideObjectProps = {
     workspaceRef?: RefObject<HTMLDivElement | null>;
     slideRef: RefObject<HTMLDivElement | null>;
     object: SlideObject,
-    slide: Slide,
+    slideId: string,
     preview?: boolean;
-    setPreviewSlide?: (s: Slide) => void,
-    selectedObjectIds?: string[],
     onSelect?: (objectId: string, additive: boolean) => void;
 }
 
 function SlideObject(props: SlideObjectProps) {
-    const { preview, onSelect, object, slide, setPreviewSlide } = props;
+    const dispatch = useAppDispatch();
+    const { preview, onSelect, object, slideId } = props;
 
     const handleClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
         if (!preview) return;
@@ -35,19 +34,22 @@ function SlideObject(props: SlideObjectProps) {
     }, [preview, onSelect, object.id]);
 
     const handleSubmit = useCallback((text: string) => {
-        setPreviewSlide?.(updateObject(slide, object.id, { text }));
-    }, [setPreviewSlide, slide, object.id]);
+        if (!preview) return;
+        dispatch(updateObject({ slideId, objectId: object.id, changes: { text } }));
+    }, [dispatch, preview, slideId, object.id]);
 
-    const isSelected = props.selectedObjectIds?.includes(props.object.id) ?? false;
+    const isSelected = useAppSelector(state =>
+        preview === true &&
+        state.presentation.activeSlideId === slideId &&
+        state.presentation.selectedObjectIds.includes(object.id)
+    );
     const { position, dragHandlers } = useObjectDrag({
         object: props.object,
         workspaceRef: props.workspaceRef,
         slideRef: props.slideRef,
         enabled: props.preview === true,
         onDragEnd: position => {
-            props.setPreviewSlide?.(
-                updateObject(props.slide, props.object.id, position)
-            );
+            dispatch(updateObject({ slideId, objectId: object.id, changes: position }));
         },
     });
     const { size, resizeHandlers } = useObjectResize({
@@ -56,9 +58,7 @@ function SlideObject(props: SlideObjectProps) {
         enabled: props.preview === true && isSelected,
         slideRef: props.slideRef,
         onResizeEnd: ({ width, height }) => {
-            props.setPreviewSlide?.(
-                updateObject(props.slide, props.object.id, { width, height })
-            );
+            dispatch(updateObject({ slideId, objectId: object.id, changes: { width, height } }));
         },
     });
     return (

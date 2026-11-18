@@ -1,22 +1,22 @@
-import { Presentation } from "../../../types/presentation";
+import { setActiveSlide, clearSelection } from "../../../store/slices/presentationSlice";
 import styles from "./SlideList.module.css";
 import { SlideView } from "../SlideView/SlideView";
 import { useEffect } from "react";
 import { MenuState } from "../../layout/EditorContainer/EditorContainer";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 
 type SlideListProps = {
-    presentation: Presentation,
-    setActiveSlideId: (s: string | null) => void,
-    activeSlideId: string | null,
-    setPresentation: (p: Presentation) => void,
     setMenuState: (state: MenuState) => void,
     selectedSlideIds: string[],
     setSelectedSlideIds: (s: string[]) => void,
-    setSelectedObjectIds: (s: string[]) => void,
     setSelectionTarget: (s: "slides" | "objects") => void
 }
 
 function SlideList(props: SlideListProps) {
+    const dispatch = useAppDispatch();
+    const presentation = useAppSelector(state => state.presentation.presentation);
+    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
+    const { setSelectedSlideIds, setSelectionTarget } = props;
     const scale = 150 / 1280; 
 
     const handleSlideSelect = (slideId: string, additive: boolean) => {
@@ -36,9 +36,9 @@ function SlideList(props: SlideListProps) {
         props.setSelectedSlideIds(nextIds);
 
         if (!additive || !selectedIds.includes(slideId)) {
-            props.setActiveSlideId(slideId);
-        } else if (props.activeSlideId === slideId) {
-            props.setActiveSlideId(nextIds[0]);
+            dispatch(setActiveSlide(slideId));
+        } else if (activeSlideId === slideId) {
+            dispatch(setActiveSlide(nextIds[0]));
         }
     };
 
@@ -67,13 +67,11 @@ function SlideList(props: SlideListProps) {
                     || ( target instanceof HTMLTextAreaElement && !target.readOnly && !target.disabled))
             ) return;
 
-            const slides = props.presentation.slides;
+            if (!presentation) return;
+            const slides = presentation.slides;
             if (slides.length === 0) return;
-
             event.preventDefault();
-
-            const currentIndex = slides.findIndex(slide => slide.id === props.activeSlideId);
-
+            const currentIndex = slides.findIndex(slide => slide.id === activeSlideId);
             const nextIndex = currentIndex === -1
                 ? 0
                 : Math.max(
@@ -86,10 +84,9 @@ function SlideList(props: SlideListProps) {
 
             const nextSlide = slides[nextIndex];
 
-            props.setActiveSlideId(nextSlide.id);
-            props.setSelectedSlideIds([nextSlide.id]);
-            props.setSelectedObjectIds([]);
-            props.setSelectionTarget("slides");
+            dispatch(setActiveSlide(nextSlide.id));
+            setSelectedSlideIds([nextSlide.id]);
+            setSelectionTarget("slides");
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -97,19 +94,13 @@ function SlideList(props: SlideListProps) {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [
-        props.presentation.slides,
-        props.activeSlideId,
-        props.setActiveSlideId,
-        props.setSelectedSlideIds,
-        props.setSelectedObjectIds,
-        props.setSelectionTarget,
-    ]);
+    }, [presentation, activeSlideId, dispatch, setSelectedSlideIds, setSelectionTarget]);
+
+    if (!presentation) return null;
+
     return (
-        <div 
-            className={styles.slideList}
-        >
-            {props.presentation.slides.map((slide) => {
+        <div className={styles.slideList}>
+            {presentation.slides.map((slide) => {
                 const isSelected = props.selectedSlideIds.includes(slide.id);
                 return (
                     <div
@@ -118,8 +109,9 @@ function SlideList(props: SlideListProps) {
                         className={isSelected ? styles.thumbnailWrapperActive : styles.thumbnailWrapper}
                         onClick={(event) => {
                             event.stopPropagation();
+                            event.currentTarget.focus();
+                            dispatch(clearSelection());
                             handleSlideSelect(slide.id, event.ctrlKey || event.metaKey);
-                            props.setSelectedObjectIds([]);
                         }}
                         onContextMenu={(e) => handleContextMenu(e, slide.id)}
                     >

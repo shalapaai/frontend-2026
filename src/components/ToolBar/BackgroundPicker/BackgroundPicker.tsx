@@ -1,22 +1,21 @@
-import { updateSlide } from "../../../functions/slide";
+import { useAppDispatch } from "../../../store/hooks";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChangeEvent, Dispatch, SetStateAction } from "react";
-import type { Presentation } from "../../../types/presentation";
+import type { ChangeEvent } from "react";
 import type { Slide } from "../../../types/slide";
 import {
     setSlideBackgroundColor,
     setSlideBackgroundImage,
     setSlideBackgroundGradient,
     clearSlideBackground,
-} from "../../../functions/background";
+} from "../../../store/slices/presentationSlice";
 import styles from "./BackgroundPicker.module.css";
 
 type BackgroundPickerProps = {
     activeSlide: Slide;
-    setPresentation: Dispatch<SetStateAction<Presentation>>;
 };
 
-function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProps) {
+function BackgroundPicker({ activeSlide }: BackgroundPickerProps) {
+    const dispatch = useAppDispatch();
     const controlRef = useRef<HTMLDivElement>(null);
     const activeSlideId = activeSlide.id;
     const [backgroundType, setBackgroundType] = useState(activeSlide.background.type);
@@ -49,16 +48,18 @@ function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProp
     const gradient = activeSlide.background.type === "gradient" ? activeSlide.background : null;
     const gradientColors = gradient?.colors ?? ["#ffffff", "#0b57d0"];
 
-    const changeBackground = (update: (slide: Slide) => Slide) => {
-        const slideId = activeSlide.id;
-        setPresentation(previous => updateSlide(previous, slideId, update));
-    };
-
     const changeGradient = (
         colors = gradientColors,
         angle = gradient?.angle ?? 90,
         gradientType = gradient?.gradientType ?? "linear",
-    ) => changeBackground(slide => setSlideBackgroundGradient(slide, colors, angle, gradientType));
+    ) => {
+        dispatch(setSlideBackgroundGradient({
+            slideId: activeSlideId,
+            colors,
+            angle,
+            gradientType,
+        }));
+    };
 
     const handleBackgroundImageChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const file = event.currentTarget.files?.[0];
@@ -69,136 +70,135 @@ function BackgroundPicker({ activeSlide, setPresentation }: BackgroundPickerProp
         reader.onload = () => {
             const src = reader.result;
             if (typeof src !== "string") return;
-            setPresentation(previous => updateSlide(previous, slideId, slide =>
-                setSlideBackgroundImage(slide, src)
-            ));
+            dispatch(setSlideBackgroundImage({ slideId, imageUrl: src }));
         };
         reader.onerror = () => alert("Не удалось прочитать фоновое изображение");
         reader.readAsDataURL(file);
-    }, [activeSlideId, setPresentation]);
+    }, [activeSlideId, dispatch]);
 
 
     return (
-    <div
-        ref={controlRef}
-        className={styles.backgroundControl}
-        onKeyDown={event => event.stopPropagation()}
-    >
-        <button
-            type="button"
-            className={styles.toolbarButton}
-            aria-expanded={isOpen}
-            onClick={() => setIsOpen(previous => !previous)}
+        <div
+            ref={controlRef}
+            className={styles.backgroundControl}
+            onKeyDown={event => event.stopPropagation()}
         >
-            Изменить фон слайда
-        </button>
-        {isOpen && (
-            <div className={styles.backgroundPanel}>
-                <label>
-                    Тип фона
-                    <select
-                        value={backgroundType}
-                        onChange={event => {
-                            const type = event.currentTarget.value;
-                            if (type !== "color" && type !== "gradient" && type !== "image") return;
-                            setBackgroundType(type);
-                            if (type === "color") {
-                                const color = activeSlide.background.type === "color"
-                                    ? activeSlide.background.color : "#ffffff";
-                                changeBackground(slide => setSlideBackgroundColor(slide, color));
-                            } else if (type === "gradient") {
-                                changeGradient();
-                            }
-                        }}
-                    >
-                        <option value="color">Цвет</option>
-                        <option value="gradient">Градиент</option>
-                        <option value="image">Картинка</option>
-                    </select>
-                </label>
-                {backgroundType === "color" && (
-                <label>
-                    Цвет фона
-                    <input
-                        type="color"
-                        value={activeSlide.background.type === "color"
-                            ? activeSlide.background.color : "#ffffff"}
-                        onChange={event => {
-                            const color = event.currentTarget.value;
-                            changeBackground(slide => setSlideBackgroundColor(slide, color));
-                        }}
-                    />
-                </label>
-                )}
-                {backgroundType === "image" && (
-                <>
-                <button type="button" onClick={() => backgroundInputRef.current?.click()}>
-                    Добавить фоновое изображение
-                </button>
-                <input
-                    ref={backgroundInputRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={handleBackgroundImageChange}
-                />
-                </>
-                )}
-                {backgroundType === "gradient" && (
-                <fieldset className={styles.gradientControls}>
-                    <legend>Градиент</legend>
+            <button
+                type="button"
+                className={styles.toolbarButton}
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen(previous => !previous)}
+            >
+                Изменить фон слайда
+            </button>
+            {isOpen && (
+                <div className={styles.backgroundPanel}>
                     <label>
-                        Тип
+                        Тип фона
                         <select
-                            value={gradient?.gradientType ?? "linear"}
-                            onChange={event => changeGradient(
-                                gradientColors,
-                                gradient?.angle ?? 90,
-                                event.currentTarget.value === "radial" ? "radial" : "linear",
-                            )}
+                            value={backgroundType}
+                            onChange={event => {
+                                const type = event.currentTarget.value;
+                                if (type !== "color" && type !== "gradient" && type !== "image") return;
+                                setBackgroundType(type);
+                                if (type === "color") {
+                                    const color = activeSlide.background.type === "color"
+                                        ? activeSlide.background.color : "#ffffff";
+                                    dispatch(setSlideBackgroundColor({ slideId: activeSlideId, color }));
+                                } else if (type === "gradient") {
+                                    changeGradient();
+                                }
+                            }}
                         >
-                            <option value="linear">Линейный</option>
-                            <option value="radial">Радиальный</option>
+                            <option value="color">Цвет</option>
+                            <option value="gradient">Градиент</option>
+                            <option value="image">Картинка</option>
                         </select>
                     </label>
-                    {[0, 1].map(index => (
-                        <label key={index}>
-                            Цвет {index + 1}
-                            <input
-                                type="color"
-                                value={gradientColors[index]}
-                                onChange={event => {
-                                    const colors = [...gradientColors];
-                                    colors[index] = event.currentTarget.value;
-                                    changeGradient(colors);
-                                }}
-                            />
-                        </label>
-                    ))}
+                    {backgroundType === "color" && (
                     <label>
-                        Угол: {gradient?.angle ?? 90}°
+                        Цвет фона
                         <input
-                            type="range"
-                            min="0"
-                            max="360"
-                            value={gradient?.angle ?? 90}
-                            disabled={gradient?.gradientType === "radial"}
-                            onChange={event => changeGradient(
-                                gradientColors, Number(event.currentTarget.value),
-                            )}
+                            type="color"
+                            value={activeSlide.background.type === "color"
+                                ? activeSlide.background.color : "#ffffff"}
+                            onChange={event => {
+                                const color = event.currentTarget.value;
+                                dispatch(setSlideBackgroundColor({ slideId: activeSlideId, color }));
+                            }}
                         />
                     </label>
-                </fieldset>
-                )}
-                <button type="button" onClick={() => {
-                    changeBackground(clearSlideBackground);
-                    setBackgroundType("color");
-                }}>
-                    Убрать фон
-                </button>
-            </div>
-        )}
-    </div>    );
+                    )}
+                    {backgroundType === "image" && (
+                    <>
+                    <button type="button" onClick={() => backgroundInputRef.current?.click()}>
+                        Добавить фоновое изображение
+                    </button>
+                    <input
+                        ref={backgroundInputRef}
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={handleBackgroundImageChange}
+                    />
+                    </>
+                    )}
+                    {backgroundType === "gradient" && (
+                    <fieldset className={styles.gradientControls}>
+                        <legend>Градиент</legend>
+                        <label>
+                            Тип
+                            <select
+                                value={gradient?.gradientType ?? "linear"}
+                                onChange={event => changeGradient(
+                                    gradientColors,
+                                    gradient?.angle ?? 90,
+                                    event.currentTarget.value === "radial" ? "radial" : "linear",
+                                )}
+                            >
+                                <option value="linear">Линейный</option>
+                                <option value="radial">Радиальный</option>
+                            </select>
+                        </label>
+                        {[0, 1].map(index => (
+                            <label key={index}>
+                                Цвет {index + 1}
+                                <input
+                                    type="color"
+                                    value={gradientColors[index]}
+                                    onChange={event => {
+                                        const colors = [...gradientColors];
+                                        colors[index] = event.currentTarget.value;
+                                        changeGradient(colors);
+                                    }}
+                                />
+                            </label>
+                        ))}
+                        <label>
+                            Угол: {gradient?.angle ?? 90}°
+                            <input
+                                type="range"
+                                min="0"
+                                max="360"
+                                value={gradient?.angle ?? 90}
+                                disabled={gradient?.gradientType === "radial"}
+                                onChange={event => changeGradient(
+                                    gradientColors, Number(event.currentTarget.value),
+                                )}
+                            />
+                        </label>
+                    </fieldset>
+                    )}
+                    <button type="button" onClick={() => {
+                        dispatch(clearSlideBackground({ slideId: activeSlideId }));
+                        setBackgroundType("color");
+                    }}>
+                        Убрать фон
+                    </button>
+                </div>
+            )}
+        </div>    
+    );
 }
 
 export { BackgroundPicker };

@@ -1,3 +1,5 @@
+import { useAppDispatch } from "../../../store/hooks";
+import { setSelectedObjects, toggleSelectObject } from "../../../store/slices/presentationSlice";
 import type { CSSProperties } from "react";
 import { useRef } from "react";
 import type { RefObject } from "react";
@@ -10,16 +12,13 @@ type SlideViewProps = {
     workspaceRef?: RefObject<HTMLDivElement | null>;
     slide: Slide,
     preview: boolean,
-    setPreviewSlide?: (slide: Slide) => void,
     className: string,
     setMenuState?: (menu: MenuState) => void,
-    selectedObjectIds?: string[],
-    setSelectedSlideIds?: (s: string[]) => void,
-    setSelectedObjectIds?: (s: string[]) => void,
     setSelectionTarget?: (s: "slides" | "objects") => void
 }
 
 function SlideView(props: SlideViewProps) {
+    const dispatch = useAppDispatch();
     const slideRef = useRef<HTMLDivElement>(null);
     const background = props.slide.background;
     let backgroundStyle: CSSProperties;
@@ -45,7 +44,7 @@ function SlideView(props: SlideViewProps) {
             break;
     }
     const handleContextMenu = (e: React.MouseEvent, objectId: string) => {
-        if (!props.setMenuState) return;
+        if (!props.preview || !props.setMenuState) return;
         e.preventDefault(); 
         e.stopPropagation(); 
 
@@ -59,23 +58,10 @@ function SlideView(props: SlideViewProps) {
     };
 
     const handleObjectSelect = (objectId: string, additive: boolean) => {
-        console.log(props.selectedObjectIds);
-        if (props.preview === false || !props.setSelectedObjectIds || 
-            !props.selectedObjectIds || !props.setSelectionTarget) return;
-        
-        props.setSelectionTarget("objects");
-        if (!additive) {
-            props.setSelectedObjectIds([objectId]);
-            return;
-        }
-
-        const selectedIds = props.selectedObjectIds;
-
-        props.setSelectedObjectIds(
-            selectedIds.includes(objectId)
-                ? selectedIds.filter(id => id !== objectId)
-                : [...selectedIds, objectId]
-        );
+        if (!props.preview) return;
+        props.setSelectionTarget?.("objects");
+        if (additive) dispatch(toggleSelectObject(objectId));
+        else dispatch(setSelectedObjects([objectId]));
     };
     return (
         <div
@@ -91,11 +77,9 @@ function SlideView(props: SlideViewProps) {
                     <SlideObject
                         workspaceRef={props.workspaceRef}
                         slideRef={slideRef}
-                        slide={props.slide}
+                        slideId={props.slide.id}
                         object={object}
                         preview={props.preview}
-                        setPreviewSlide={props.setPreviewSlide}
-                        selectedObjectIds={props.selectedObjectIds}
                         onSelect={handleObjectSelect}
                     />
                 </div>

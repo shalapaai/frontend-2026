@@ -1,27 +1,21 @@
-import { updateSlide } from "../../../functions/slide";
 import { useCallback, useRef } from "react";
 import type { ChangeEvent } from "react";
 import { Button } from "../../ui/Button/Button";
-import { deepClone } from "../../../functions/utils";
-import type { Dispatch, SetStateAction } from "react";
-import type { Presentation } from "../../../types/presentation";
-import { addObject, updateObject } from "../../../functions/objects";
 import { BackgroundPicker } from "../BackgroundPicker/BackgroundPicker";
 import { TextStylePanel } from "../TextStylePanel/TextStylePanel";
 import styles from "./PropertiesBar.module.css";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { addObject, updateObject } from "../../../store/slices/presentationSlice";
 
-type PropertiesBarProps = {
-    presentation: Presentation;
-    activeSlideId: string | null;
-    selectedObjectIds: string[];
-    setPresentation: Dispatch<SetStateAction<Presentation>>;
-};
+function PropertiesBar() {
+    const dispatch = useAppDispatch();
+    const presentation = useAppSelector(state => state.presentation.presentation);
+    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
+    const selectedObjectIds = useAppSelector(state => state.presentation.selectedObjectIds);
 
-function PropertiesBar(props: PropertiesBarProps) {
-    const { activeSlideId, setPresentation } = props;
-    const activeSlide = props.presentation.slides.find(slide => slide.id === props.activeSlideId);
-    const selectedObject = props.selectedObjectIds.length === 1
-        ? activeSlide?.objects.find(object => object.id === props.selectedObjectIds[0])
+    const activeSlide = presentation?.slides.find(slide => slide.id === activeSlideId);
+    const selectedObject = selectedObjectIds.length === 1
+        ? activeSlide?.objects.find(object => object.id === selectedObjectIds[0])
         : undefined;
 
     const imageInputRef = useRef<HTMLInputElement>(null);
@@ -41,16 +35,17 @@ function PropertiesBar(props: PropertiesBarProps) {
                 const src = reader.result;
                 if (typeof src !== "string") return;
 
-                setPresentation(previous => updateSlide(previous, slideId, slide =>
-                    addObject(slide, {
+                dispatch(addObject({
+                    slideId,
+                    object: {
                         type: "image",
                         src,
                         x: 200,
                         y: 150,
                         width: 300,
                         height: 200,
-                    })
-                ));
+                    },
+                }));
             };
 
             reader.onerror = () => {
@@ -59,8 +54,10 @@ function PropertiesBar(props: PropertiesBarProps) {
 
             reader.readAsDataURL(file);
         },
-        [activeSlideId, setPresentation],
+        [activeSlideId, dispatch],
     );
+
+    if (!presentation) return null;
     return (
         <section className={styles.bar} aria-label="Свойства слайда и текста">
             <Button
@@ -71,27 +68,20 @@ function PropertiesBar(props: PropertiesBarProps) {
                         alert("Нет активного слайда");
                         return;
                     }
-                    const updatedSlide = addObject(activeSlide, {
-                        type: "text",
-                        x: 600,
-                        y: 300,
-                        width: 300,
-                        height: 100,
-                        fontSize: 18,
-                        fontColor: "#000000",
-                        fontFamily: "Arial",
-                        text: ""
-                    });
-                    const newPresentation = deepClone(props.presentation);
-                    const slideIndex = newPresentation.slides.findIndex(
-                        slide => slide.id === props.activeSlideId
-                    );
-                    
-                    if (slideIndex !== -1) {
-                        newPresentation.slides[slideIndex] = updatedSlide;
-                    }
-                    props.setPresentation(newPresentation);
-                    console.log("Добавить текстовое поле");
+                    dispatch(addObject({
+                        slideId: activeSlide.id,
+                        object: {
+                            type: "text",
+                            x: 600,
+                            y: 300,
+                            width: 300,
+                            height: 100,
+                            fontSize: 18,
+                            fontColor: "#000000",
+                            fontFamily: "Arial",
+                            text: "",
+                        },
+                    }));
                 }}
             />
             <Button
@@ -119,19 +109,16 @@ function PropertiesBar(props: PropertiesBarProps) {
                 <BackgroundPicker
                     key={activeSlide.id}
                     activeSlide={activeSlide}
-                    setPresentation={setPresentation}
                 />
             )}
             {activeSlide && selectedObject?.type === "text" && (
                 <TextStylePanel
                     object={selectedObject}
-                    onChange={style => {
-                        const slideId = activeSlide.id;
-                        const objectId = selectedObject.id;
-                        setPresentation(previous => updateSlide(previous, slideId, slide =>
-                            updateObject(slide, objectId, style)
-                        ));
-                    }}
+                    onChange={style => dispatch(updateObject({
+                        slideId: activeSlide.id,
+                        objectId: selectedObject.id,
+                        changes: style,
+                    }))}
                 />
             )}
         </section>

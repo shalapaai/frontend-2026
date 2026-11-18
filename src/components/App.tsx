@@ -53,16 +53,8 @@ export function App() {
     }
     return (
         <>
-            <Toolbar
-                selectedObjectIds={selectedObjectIds}
-                presentation={presentation} 
-                activeSlideId={activeSlideId}
-            />
-            <EditorContainer
-                selectedObjectIds={selectedObjectIds}
-                presentation={presentation} 
-                activeSlideId={activeSlideId}
-            />
+            <Toolbar />
+            <EditorContainer />
         </>
     );
 }
