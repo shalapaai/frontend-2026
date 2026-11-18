@@ -1,22 +1,28 @@
-import { usePresentationHistory } from "./hooks/usePresentationHistory";
+import { setPreviewMode } from "../store/slices/presentationSlice";
+import { undo, redo } from "../store/slices/historySlice";
 import { PreviewOverlay } from "./layout/PreviewOverlay/PreviewOverlay";
 import { Toolbar } from "./ToolBar/Toolbar";
 import { EditorContainer } from "./layout/EditorContainer/EditorContainer";
-import { useEffect, useState } from "react";
-import { createTestPresentation } from "../data";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 
 export function App() {
-    const {
-        presentation, setPresentation, undo, redo, canUndo, canRedo,
-    } = usePresentationHistory(createTestPresentation);
-    const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
-    const [previewMode, setPreviewMode] = useState(false);
-    const [requestedActiveSlideId, setActiveSlideId] = useState<string | null>(
-        presentation.slides[0]?.id ?? null
+    const dispatch = useAppDispatch();
+    const presentation = useAppSelector(
+        state => state.presentation.presentation
     );
-    
-    const activeSlideId = presentation.slides.some(slide => slide.id === requestedActiveSlideId)
-        ? requestedActiveSlideId : presentation.slides[0]?.id ?? null;
+    const activeSlideId = useAppSelector(
+        state => state.presentation.activeSlideId
+    );
+    const selectedObjectIds = useAppSelector(
+        state => state.presentation.selectedObjectIds
+    );
+    const previewMode = useAppSelector(
+        state => state.presentation.isPreviewMode
+    );
+
+    const canUndo = useAppSelector(state => state.history.past.length > 0);
+    const canRedo = useAppSelector(state => state.history.future.length > 0);
 
     useEffect(() => {
         if (previewMode) return;
@@ -32,41 +38,29 @@ export function App() {
             if (!isUndo && !isRedo) return;
             event.preventDefault();
             if ((isUndo && canUndo) || (isRedo && canRedo)) {
-                setSelectedObjectIds([]);
-                if (isUndo) undo();
-                else redo();
+                if (isUndo) dispatch(undo());
+                else dispatch(redo());
             }
         };
         window.addEventListener("keydown", handleKeyDown, true);
         return () => window.removeEventListener("keydown", handleKeyDown, true);
-    }, [previewMode, canUndo, canRedo, undo, redo]);
+    }, [previewMode, canUndo, canRedo, dispatch]);
 
     if (!presentation) return;
     
     if (previewMode) {
-        return <PreviewOverlay 
-            presentation={presentation} 
-            activeSlideId={activeSlideId}
-            setActiveSlideId={setActiveSlideId}
-            onClose={() => setPreviewMode(false)}
-        />;
+        return <PreviewOverlay />;
     }
     return (
         <>
             <Toolbar
                 selectedObjectIds={selectedObjectIds}
                 presentation={presentation} 
-                setPresentation={setPresentation}
-                setPreviewMode={setPreviewMode}
-                setActiveSlideId={setActiveSlideId}
                 activeSlideId={activeSlideId}
             />
             <EditorContainer
                 selectedObjectIds={selectedObjectIds}
-                setSelectedObjectIds={setSelectedObjectIds}
                 presentation={presentation} 
-                setPresentation={setPresentation}
-                setActiveSlideId={setActiveSlideId}
                 activeSlideId={activeSlideId}
             />
         </>
