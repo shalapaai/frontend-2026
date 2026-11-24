@@ -1,35 +1,30 @@
 import styles from "./SlideList.module.css";
 import { SlideView } from "../SlideView/SlideView";
 import { useEffect } from "react";
-import { MenuState } from "../../layout/EditorContainer/EditorContainer";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { useSlideSelection } from "../../hooks/useSlideSelection";
-import { removeSlides } from "../../../store/slices/presentationSlice";
-import { clearSelection } from "../../../store/slices/viewModelSlice";
+import { useDeleteSelection } from "../../hooks/useDeleteSelection";
+import { openContextMenu } from "../../../store/slices/viewModelSlice";
 import { isEditableTarget } from "../../utils/isEditableTarget";
 
-type SlideListProps = {
-    setMenuState: (state: MenuState) => void,
-}
-
-function SlideList(props: SlideListProps) {
+function SlideList() {
     const dispatch = useAppDispatch();
     const presentation = useAppSelector(state => state.presentation);
     const selectionTarget = useAppSelector(state => state.viewModel.selectionTarget);
     const { activeSlideId, selectedSlideIds, selectSlide } = useSlideSelection();
-    const { setMenuState } = props;
+    const { deleteSlides } = useDeleteSelection();
     const scale = 150 / 1280; 
 
     const handleContextMenu = (e: React.MouseEvent, slideId: string) => {
         e.preventDefault(); 
         e.stopPropagation(); 
 
-        props.setMenuState({
+        dispatch(openContextMenu({
             type: "slide",
             x: e.clientX, 
             y: e.clientY, 
             slideId: slideId,
-        });
+        }));
     };
 
     useEffect(() => {
@@ -70,14 +65,12 @@ function SlideList(props: SlideListProps) {
             if (selectionTarget !== "slides" || selectedSlideIds.length === 0) return;
 
             event.preventDefault();
-            dispatch(removeSlides({ slideIds: selectedSlideIds }));
-            dispatch(clearSelection());
-            setMenuState(null);
+            deleteSlides(selectedSlideIds);
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectionTarget, selectedSlideIds, dispatch, setMenuState]);
+    }, [selectionTarget, selectedSlideIds, deleteSlides]);
 
     if (!presentation) return null;
 

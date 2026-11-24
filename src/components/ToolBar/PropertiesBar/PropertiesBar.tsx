@@ -6,17 +6,14 @@ import { TextStylePanel } from "../TextStylePanel/TextStylePanel";
 import styles from "./PropertiesBar.module.css";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { addObject, updateObject } from "../../../store/slices/presentationSlice";
+import { selectActiveSlide, selectSelectedObject } from "../../../store/selectors";
 
 function PropertiesBar() {
     const dispatch = useAppDispatch();
     const presentation = useAppSelector(state => state.presentation);
     const activeSlideId = useAppSelector(state => state.viewModel.activeSlideId);
-    const selectedObjectIds = useAppSelector(state => state.viewModel.selectedObjectIds);
-
-    const activeSlide = presentation?.slides.find(slide => slide.id === activeSlideId);
-    const selectedObject = selectedObjectIds.length === 1
-        ? activeSlide?.objects.find(object => object.id === selectedObjectIds[0])
-        : undefined;
+    const activeSlide = useAppSelector(selectActiveSlide);
+    const selectedObject = useAppSelector(selectSelectedObject);
 
     const imageInputRef = useRef<HTMLInputElement>(null);
     const handleImageChange = useCallback(

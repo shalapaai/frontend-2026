@@ -1,44 +1,29 @@
 import styles from "./EditorContainer.module.css"
 import { SlideList } from "../../slides/SlideList/SlideList";
 import { Workspace } from "../Workspace/Workspace";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ContextMenu } from "../../ContextMenu/ContextMenu";
-import { removeSlides, removeObjects } from "../../../store/slices/presentationSlice";
-import { setSelectedObjects, clearSelection } from "../../../store/slices/viewModelSlice";
+import { clearSelection, closeContextMenu } from "../../../store/slices/viewModelSlice";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-
-type MenuState =
-    | {
-        type: "slide";
-        slideId: string;
-        x: number;
-        y: number;
-    }
-    | {
-        type: "object";
-        slideId: string;
-        objectId: string;
-        x: number;
-        y: number;
-    }
-    | null;
+import { useDeleteSelection } from "../../hooks/useDeleteSelection";
 
 function EditorContainer() {
     const dispatch = useAppDispatch();
     const presentation = useAppSelector(state => state.presentation);
     const selectedObjectIds = useAppSelector(state => state.viewModel.selectedObjectIds);
     const selectedSlideIds = useAppSelector(state => state.viewModel.selectedSlideIds);
-    const [menuState, setMenuState] = useState<MenuState>(null);
+    const menuState = useAppSelector(state => state.viewModel.contextMenu);
+    const { deleteSlides, deleteObjects } = useDeleteSelection();
 
     const isMenuOpen = menuState !== null;
 
     useEffect(() => {
         const handleClickOutside = () => {
-            setMenuState(null);
+            dispatch(closeContextMenu());
         };
         if (isMenuOpen) window.addEventListener("click", handleClickOutside);
         return () => window.removeEventListener("click", handleClickOutside);
-    }, [isMenuOpen]);
+    }, [isMenuOpen, dispatch]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -64,34 +49,25 @@ function EditorContainer() {
                 dispatch(clearSelection());
             }}
         >
-            <SlideList 
-                setMenuState={setMenuState}
-            />
-            <Workspace 
-                setMenuState={setMenuState}
-            />
+            <SlideList />
+            <Workspace />
             {menuState !== null && (
                 <ContextMenu
                     x={menuState.x}
                     y={menuState.y}
-                    onClose={() => setMenuState(null)}
+                    onClose={() => dispatch(closeContextMenu())}
                     onDelete={() => {
-                        if (!menuState) return;
-
                         if (menuState.type === "slide") {
                             const ids = selectedSlideIds.includes(menuState.slideId)
                                 ? selectedSlideIds
                                 : [menuState.slideId];
-                            dispatch(removeSlides({ slideIds: ids }));
-                            dispatch(clearSelection());
+                            deleteSlides(ids);
                         } else {
                             const ids = selectedObjectIds.includes(menuState.objectId)
                                 ? selectedObjectIds
                                 : [menuState.objectId];
-                            dispatch(removeObjects({ slideId: menuState.slideId, objectIds: ids }));
-                            dispatch(setSelectedObjects([]));
+                            deleteObjects(menuState.slideId, ids);
                         }
-                        setMenuState(null);
                     }}
                 />
             )}
@@ -100,6 +76,5 @@ function EditorContainer() {
 }
 
 export {
-    EditorContainer,
-    MenuState
+    EditorContainer
 }

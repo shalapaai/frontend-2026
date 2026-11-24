@@ -4,7 +4,7 @@ import { Button } from "../ui/Button/Button";
 import styles from './Toolbar.module.css';
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { addSlide, updatePresentationName } from "../../store/slices/presentationSlice";
-import { setActiveSlide, setPreviewMode } from "../../store/slices/viewModelSlice";
+import { startPreview } from "../../store/slices/viewModelSlice";
 
 function Toolbar() {
     const dispatch = useAppDispatch();
@@ -61,10 +61,7 @@ function Toolbar() {
                 <Button
                     text="Запуск предпросмотра"
                     className={styles.toolbarButton}
-                    onClick={() => {
-                        dispatch(setActiveSlide(presentation.slides[0]?.id ?? null));
-                        dispatch(setPreviewMode(true));
-                    }}
+                    onClick={() => dispatch(startPreview(presentation.slides[0]?.id ?? null))}
                 />
             </div>
             <PropertiesBar />

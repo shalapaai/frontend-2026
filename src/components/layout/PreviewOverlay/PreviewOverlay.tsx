@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { selectActiveSlide } from "../../../store/selectors";
 import { setActiveSlide, setPreviewMode } from "../../../store/slices/viewModelSlice";
 import { SlideView } from "../../slides/SlideView/SlideView";
 import styles from "./PreviewOverlay.module.css";
@@ -8,6 +9,7 @@ function PreviewOverlay() {
     const dispatch = useAppDispatch();
     const presentation = useAppSelector(state => state.presentation);
     const activeSlideId = useAppSelector(state => state.viewModel.activeSlideId);
+    const activeSlide = useAppSelector(selectActiveSlide);
 
     const handleClose = useCallback(() => {
         dispatch(setPreviewMode(false));
@@ -38,7 +40,6 @@ function PreviewOverlay() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleClose, changeSlide]);
 
-    const activeSlide = presentation?.slides.find(slide => slide.id === activeSlideId);
     if (!activeSlide) {
         return (
             <div className={styles.previewOverlay} onClick={handleClose}>

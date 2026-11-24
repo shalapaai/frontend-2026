@@ -3,12 +3,17 @@ import type { Presentation } from '../../types/presentation';
 
 export type SelectionTarget = "slides" | "objects";
 
+export type ContextMenuState =
+    | { type: "slide"; slideId: string; x: number; y: number }
+    | { type: "object"; slideId: string; objectId: string; x: number; y: number };
+
 export interface ViewModelState {
     activeSlideId: string | null;
     selectedSlideIds: string[];
     selectedObjectIds: string[];
     selectionTarget: SelectionTarget;
     isPreviewMode: boolean;
+    contextMenu: ContextMenuState | null;
 }
 
 const initialState: ViewModelState = {
@@ -17,6 +22,7 @@ const initialState: ViewModelState = {
     selectedObjectIds: [],
     selectionTarget: "slides",
     isPreviewMode: false,
+    contextMenu: null,
 };
 
 const viewModelSlice = createSlice({
@@ -72,6 +78,19 @@ const viewModelSlice = createSlice({
         setPreviewMode: (state, action: PayloadAction<boolean>) => {
             state.isPreviewMode = action.payload;
         },
+        startPreview: (state, action: PayloadAction<string | null>) => {
+            state.activeSlideId = action.payload;
+            state.selectedSlideIds = action.payload ? [action.payload] : [];
+            state.selectedObjectIds = [];
+            state.contextMenu = null;
+            state.isPreviewMode = true;
+        },
+        openContextMenu: (state, action: PayloadAction<ContextMenuState>) => {
+            state.contextMenu = action.payload;
+        },
+        closeContextMenu: (state) => {
+            state.contextMenu = null;
+        },
         syncWithPresentation: (state, action: PayloadAction<Presentation | null>) => {
             const slides = action.payload?.slides ?? [];
             const activeSlide = slides.find(slide => slide.id === state.activeSlideId);
@@ -102,6 +121,9 @@ export const {
     toggleSelectObject,
     clearSelection,
     setPreviewMode,
+    startPreview,
+    openContextMenu,
+    closeContextMenu,
     syncWithPresentation,
 } = viewModelSlice.actions;
 

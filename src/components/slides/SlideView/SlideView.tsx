@@ -1,10 +1,9 @@
 import { useAppDispatch } from "../../../store/hooks";
-import { setSelectedObjects, setSelectionTarget, toggleSelectObject } from "../../../store/slices/viewModelSlice";
+import { openContextMenu, setSelectedObjects, setSelectionTarget, toggleSelectObject } from "../../../store/slices/viewModelSlice";
 import type { CSSProperties } from "react";
 import { useRef } from "react";
 import type { RefObject } from "react";
 import { Slide } from "../../../types/slide";
-import { MenuState } from "../../layout/EditorContainer/EditorContainer";
 import { SlideObject } from "../SlideObject/SlideObject";
 import styles from "./SlideView.module.css";
 
@@ -13,7 +12,6 @@ type SlideViewProps = {
     slide: Slide,
     preview: boolean,
     className: string,
-    setMenuState?: (menu: MenuState) => void,
 }
 
 function SlideView(props: SlideViewProps) {
@@ -43,17 +41,17 @@ function SlideView(props: SlideViewProps) {
             break;
     }
     const handleContextMenu = (e: React.MouseEvent, objectId: string) => {
-        if (!props.preview || !props.setMenuState) return;
+        if (!props.preview) return;
         e.preventDefault(); 
         e.stopPropagation(); 
 
-        props.setMenuState({
+        dispatch(openContextMenu({
             type: "object",
             x: e.clientX, 
             y: e.clientY, 
             slideId: props.slide.id,
             objectId: objectId
-        });
+        }));
     };
 
     const handleObjectSelect = (objectId: string, additive: boolean) => {
