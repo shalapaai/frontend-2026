@@ -40,8 +40,8 @@ function SlideObject(props: SlideObjectProps) {
 
     const isSelected = useAppSelector(state =>
         preview === true &&
-        state.presentation.activeSlideId === slideId &&
-        state.presentation.selectedObjectIds.includes(object.id)
+        state.viewModel.activeSlideId === slideId &&
+        state.viewModel.selectedObjectIds.includes(object.id)
     );
     const { position, dragHandlers } = useObjectDrag({
         object: props.object,

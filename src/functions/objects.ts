@@ -2,14 +2,8 @@ import { Slide } from "../types/slide";
 import { SlideObject, TextObject, ImageObject } from "../types/objects";
 import { deepClone, generateId, isColorHash } from "./utils";
 
-// разобраться
 type NewObject = Omit<TextObject, 'id'> | Omit<ImageObject, 'id'>;
 type UpdatedObject = Partial<Omit<TextObject, 'id' | 'type'>> | Partial<Omit<ImageObject, 'id' | 'type'>>;
-
-type UpdateObjectParams = {
-    objectId: string;
-    updatedObject: UpdatedObject;
-};
 
 function addObject(slide: Slide, object: NewObject): Slide {
     if (object.type === 'text' && (!isColorHash(object.fontColor) || object.fontSize <= 0 || object.fontFamily === '')) 
@@ -51,6 +45,13 @@ function removeObject(slide: Slide, objectId: string): Slide {
     return newSlide;
 }
 
+function removeObjects(slide: Slide, objectIds: string[]): Slide {
+    if (!slide.objects.some(object => objectIds.includes(object.id))) return slide;
+    const newSlide = deepClone(slide);
+    newSlide.objects = newSlide.objects.filter(object => !objectIds.includes(object.id));
+    return newSlide;
+}
+
 function updateObject(slide: Slide, objectId: string, updatedObject: UpdatedObject): Slide {
 
     const isFontSizeNotValid = 
@@ -81,5 +82,6 @@ function updateObject(slide: Slide, objectId: string, updatedObject: UpdatedObje
 export {
     addObject,
     removeObject,
+    removeObjects,
     updateObject
 }

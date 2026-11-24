@@ -3,11 +3,12 @@ import { usePdfExport } from "../hooks/usePdfExport";
 import { Button } from "../ui/Button/Button";
 import styles from './Toolbar.module.css';
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { addSlide, setActiveSlide, setPreviewMode, updatePresentationName } from "../../store/slices/presentationSlice";
+import { addSlide, updatePresentationName } from "../../store/slices/presentationSlice";
+import { setActiveSlide, setPreviewMode } from "../../store/slices/viewModelSlice";
 
 function Toolbar() {
     const dispatch = useAppDispatch();
-    const presentation = useAppSelector(state => state.presentation.presentation);
+    const presentation = useAppSelector(state => state.presentation);
     const { exportToPdf, isExporting } = usePdfExport();
     if (!presentation) return null;
     return (

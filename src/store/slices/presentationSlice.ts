@@ -20,6 +20,7 @@ import {
 import {
     addObject as addObjectFn,
     removeObject as removeObjectFn,
+    removeObjects as removeObjectsFn,
     updateObject as updateObjectFn,
 } from '../../functions/objects.js';
 
@@ -41,111 +42,58 @@ type AddObjectPayload = {
     object: Parameters<typeof addObjectFn>[1]
 }
 
-export interface PresentationState {
-    presentation: Presentation | null;
-    activeSlideId: string | null;
-    selectedObjectIds: string[];
-    isPreviewMode: boolean;
-}
+export type PresentationState = Presentation | null;
 
-const initialState: PresentationState = {
-    presentation: null,
-    activeSlideId: null,
-    selectedObjectIds: [],
-    isPreviewMode: false,
-};
+const initialState = null as PresentationState;
 
 const presentationSlice = createSlice({
     name: 'presentation',
     initialState,
     reducers: {
-        openPresentation: (state, action: PayloadAction<Presentation>) => {
-            state.presentation = action.payload;
-            state.activeSlideId = action.payload.slides[0]?.id || null;
-            state.selectedObjectIds = [];
-        },
-        setPresentation: (state, action: PayloadAction<Presentation>) => {
-            state.presentation = action.payload;
-            const activeSlide = action.payload.slides.find(slide => slide.id === state.activeSlideId);
-            if (!activeSlide) {
-                state.activeSlideId = action.payload.slides[0]?.id ?? null;
-                state.selectedObjectIds = [];
-            } else {
-                state.selectedObjectIds = state.selectedObjectIds.filter(id =>
-                    activeSlide.objects.some(object => object.id === id)
-                );
-            }
-        },
-        setSelectedObjects: (state, action: PayloadAction<string[]>) => {
-            state.selectedObjectIds = action.payload;
-        },
-        setActiveSlide: (state, action: PayloadAction<string | null>) => {
-            state.activeSlideId = action.payload;
-            state.selectedObjectIds = [];
-        },
-        toggleSelectObject: (state, action: PayloadAction<string>) => {
-            const index = state.selectedObjectIds.indexOf(action.payload);
-            if (index === -1) {
-                state.selectedObjectIds.push(action.payload);
-            } else {
-                state.selectedObjectIds.splice(index, 1);
-            }
-        },
-        clearSelection: (state) => {
-            state.selectedObjectIds = [];
-        },
-        setPreviewMode: (state, action: PayloadAction<boolean>) => {
-            state.isPreviewMode = action.payload;
-        },
+        openPresentation: (state, action: PayloadAction<Presentation>) => action.payload,
+        setPresentation: (state, action: PayloadAction<Presentation>) => action.payload,
 
         updatePresentationName: (state, action: PayloadAction<string>) => {
-            if (!state.presentation) return;
+            if (!state) return;
 
-            state.presentation = updatePresentationNameFn(
-                state.presentation,
+            return updatePresentationNameFn(
+                state,
                 action.payload,
             );
         },
 
         addSlide: state => {
-            if (!state.presentation) return;
-            state.presentation = addSlideFn(state.presentation);
+            if (!state) return;
+            return addSlideFn(state);
         },
 
         removeSlides: (state, action: PayloadAction<{ slideIds: string[] }>) => {
-            if (!state.presentation) return;
-            state.presentation = removeSlidesFn(state.presentation, action.payload.slideIds);
-            const activeSlideExists = state.presentation.slides.some(
-                slide => slide.id === state.activeSlideId,
-            );
-            if (!activeSlideExists) {
-                state.activeSlideId = state.presentation.slides[0]?.id ?? null;
-                state.selectedObjectIds = [];
-            }
+            if (!state) return;
+            return removeSlidesFn(state, action.payload.slideIds);
         },
 
         moveSlide: (state, action: PayloadAction<{ slideId: string, newIndex: number }>) => {
-            if (!state.presentation) return;
-            state.presentation = moveSlideFn(
-                state.presentation,
+            if (!state) return;
+            return moveSlideFn(
+                state,
                 action.payload.slideId,
                 action.payload.newIndex,
             );
         },
 
         duplicateSlide: (state, action: PayloadAction<{ slideId: string, index: number }>) => {
-            if (!state.presentation) return;
-            state.presentation = duplicateSlideFn(
-                state.presentation,
+            if (!state) return;
+            return duplicateSlideFn(
+                state,
                 action.payload.slideId,
                 action.payload.index,
             );
         },
 
         addObject: (state,  action: PayloadAction<AddObjectPayload>) => {
-            if (!state.presentation) return;
-            state.presentation = updateSlideFn(
-                state.presentation,
+            if (!state) return;
+            return updateSlideFn(
+                state,
                 action.payload.slideId,
                 slide => addObjectFn(slide, action.payload.object),
             );
@@ -155,27 +103,35 @@ const presentationSlice = createSlice({
             state,
             action: PayloadAction<{ slideId: string; objectId: string }>,
         ) => {
-            if (!state.presentation) return;
+            if (!state) return;
             const { slideId, objectId } = action.payload;
-            state.presentation = updateSlideFn(
-                state.presentation,
+            return updateSlideFn(
+                state,
                 slideId,
                 slide => removeObjectFn(slide, objectId),
             );
-            if (state.activeSlideId === slideId) {
-                state.selectedObjectIds = state.selectedObjectIds.filter(
-                    id => id !== objectId,
-                );
-            }
+        },
+
+        removeObjects: (
+            state,
+            action: PayloadAction<{ slideId: string; objectIds: string[] }>,
+        ) => {
+            if (!state) return;
+            const { slideId, objectIds } = action.payload;
+            return updateSlideFn(
+                state,
+                slideId,
+                slide => removeObjectsFn(slide, objectIds),
+            );
         },
 
         updateObject: (state, action: PayloadAction<UpdateObjectPayload>) => {
-            if (!state.presentation) return;
+            if (!state) return;
 
             const { slideId, objectId, changes } = action.payload;
 
-            state.presentation = updateSlideFn(
-                state.presentation,
+            return updateSlideFn(
+                state,
                 slideId,
                 slide => updateObjectFn(slide, objectId, changes),
             );
@@ -185,9 +141,9 @@ const presentationSlice = createSlice({
             state,
             action: PayloadAction<{ slideId: string; color: string }>,
         ) => {
-            if (!state.presentation) return;
-            state.presentation = updateSlideFn(
-                state.presentation,
+            if (!state) return;
+            return updateSlideFn(
+                state,
                 action.payload.slideId,
                 slide => setSlideBackgroundColorFn(slide, action.payload.color),
             );
@@ -202,9 +158,9 @@ const presentationSlice = createSlice({
                 gradientType: "linear" | "radial";
             }>
         ) => {
-            if (!state.presentation) return;
-            state.presentation = updateSlideFn(
-                state.presentation,
+            if (!state) return;
+            return updateSlideFn(
+                state,
                 action.payload.slideId,
                 slide => setSlideBackgroundGradientFn(
                     slide, 
@@ -219,9 +175,9 @@ const presentationSlice = createSlice({
             state,
             action: PayloadAction<{ slideId: string; imageUrl: string }>,
         ) => {
-            if (!state.presentation) return;
-            state.presentation = updateSlideFn(
-                state.presentation,
+            if (!state) return;
+            return updateSlideFn(
+                state,
                 action.payload.slideId,
                 slide => setSlideBackgroundImageFn(slide, action.payload.imageUrl),
             );
@@ -231,9 +187,9 @@ const presentationSlice = createSlice({
             state,
             action: PayloadAction<{ slideId: string }>,
         ) => {
-            if (!state.presentation) return;
-            state.presentation = updateSlideFn(
-                state.presentation,
+            if (!state) return;
+            return updateSlideFn(
+                state,
                 action.payload.slideId,
                 slide => clearSlideBackgroundFn(slide),
             );
@@ -244,11 +200,6 @@ const presentationSlice = createSlice({
 export const {
     openPresentation,
     setPresentation,
-    setSelectedObjects,
-    setActiveSlide,
-    toggleSelectObject,
-    clearSelection,
-    setPreviewMode,
     updatePresentationName,
     addSlide,
     removeSlides,
@@ -256,6 +207,7 @@ export const {
     duplicateSlide,
     addObject,
     removeObject,
+    removeObjects,
     updateObject,
     setSlideBackgroundColor,
     setSlideBackgroundGradient,

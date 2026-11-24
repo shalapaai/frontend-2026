@@ -1,46 +1,24 @@
-import { setActiveSlide, clearSelection } from "../../../store/slices/presentationSlice";
 import styles from "./SlideList.module.css";
 import { SlideView } from "../SlideView/SlideView";
 import { useEffect } from "react";
 import { MenuState } from "../../layout/EditorContainer/EditorContainer";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { useSlideSelection } from "../../hooks/useSlideSelection";
+import { removeSlides } from "../../../store/slices/presentationSlice";
+import { clearSelection } from "../../../store/slices/viewModelSlice";
+import { isEditableTarget } from "../../utils/isEditableTarget";
 
 type SlideListProps = {
     setMenuState: (state: MenuState) => void,
-    selectedSlideIds: string[],
-    setSelectedSlideIds: (s: string[]) => void,
-    setSelectionTarget: (s: "slides" | "objects") => void
 }
 
 function SlideList(props: SlideListProps) {
     const dispatch = useAppDispatch();
-    const presentation = useAppSelector(state => state.presentation.presentation);
-    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
-    const { setSelectedSlideIds, setSelectionTarget } = props;
+    const presentation = useAppSelector(state => state.presentation);
+    const selectionTarget = useAppSelector(state => state.viewModel.selectionTarget);
+    const { activeSlideId, selectedSlideIds, selectSlide } = useSlideSelection();
+    const { setMenuState } = props;
     const scale = 150 / 1280; 
-
-    const handleSlideSelect = (slideId: string, additive: boolean) => {
-        props.setSelectionTarget("slides");
-        const selectedIds = props.selectedSlideIds;
-        let nextIds: string[];
-
-        if (!additive) {
-            nextIds = [slideId];
-        } else if (selectedIds.includes(slideId)) {
-            if (selectedIds.length === 1) return;
-            nextIds = selectedIds.filter(id => id !== slideId);
-        } else {
-            nextIds = [...selectedIds, slideId];
-        }
-
-        props.setSelectedSlideIds(nextIds);
-
-        if (!additive || !selectedIds.includes(slideId)) {
-            dispatch(setActiveSlide(slideId));
-        } else if (activeSlideId === slideId) {
-            dispatch(setActiveSlide(nextIds[0]));
-        }
-    };
 
     const handleContextMenu = (e: React.MouseEvent, slideId: string) => {
         e.preventDefault(); 
@@ -58,14 +36,7 @@ function SlideList(props: SlideListProps) {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.defaultPrevented ||(event.key !== "ArrowUp" && event.key !== "ArrowDown")) 
                 return;
-
-            const target = event.target;
-
-            if (target instanceof HTMLElement &&
-                (target.isContentEditable 
-                    || (target instanceof HTMLInputElement && !target.readOnly && !target.disabled)
-                    || ( target instanceof HTMLTextAreaElement && !target.readOnly && !target.disabled))
-            ) return;
+            if (isEditableTarget(event.target)) return;
 
             if (!presentation) return;
             const slides = presentation.slides;
@@ -82,11 +53,7 @@ function SlideList(props: SlideListProps) {
                     )
                 );
 
-            const nextSlide = slides[nextIndex];
-
-            dispatch(setActiveSlide(nextSlide.id));
-            setSelectedSlideIds([nextSlide.id]);
-            setSelectionTarget("slides");
+            selectSlide(slides[nextIndex].id);
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -94,14 +61,30 @@ function SlideList(props: SlideListProps) {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [presentation, activeSlideId, dispatch, setSelectedSlideIds, setSelectionTarget]);
+    }, [presentation, activeSlideId, selectSlide]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Delete" || event.defaultPrevented) return;
+            if (isEditableTarget(event.target)) return;
+            if (selectionTarget !== "slides" || selectedSlideIds.length === 0) return;
+
+            event.preventDefault();
+            dispatch(removeSlides({ slideIds: selectedSlideIds }));
+            dispatch(clearSelection());
+            setMenuState(null);
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [selectionTarget, selectedSlideIds, dispatch, setMenuState]);
 
     if (!presentation) return null;
 
     return (
         <div className={styles.slideList}>
             {presentation.slides.map((slide) => {
-                const isSelected = props.selectedSlideIds.includes(slide.id);
+                const isSelected = selectedSlideIds.includes(slide.id);
                 return (
                     <div
                         key={slide.id}
@@ -110,8 +93,7 @@ function SlideList(props: SlideListProps) {
                         onClick={(event) => {
                             event.stopPropagation();
                             event.currentTarget.focus();
-                            dispatch(clearSelection());
-                            handleSlideSelect(slide.id, event.ctrlKey || event.metaKey);
+                            selectSlide(slide.id, event.ctrlKey || event.metaKey);
                         }}
                         onContextMenu={(e) => handleContextMenu(e, slide.id)}
                     >

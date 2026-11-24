@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { 
     addObject,
     removeObject,
+    removeObjects,
     updateObject
 } from '../functions/objects.js';
 import { createDefaultSlide } from '../functions/slide.js';
 
-// вынести в константы
 const BASE_TEXT_OBJECT = {
     type: 'text',
     x: 0,
@@ -124,6 +124,22 @@ describe('removeObject', () => {
         );
         const newSlide = removeObject(slide, slide.objects[0].id);
         expect(newSlide.objects.length).toBe(0);
+    });
+});
+
+describe('removeObjects', () => {
+    it('should remove several objects', () => {
+        let slide = addObject(createDefaultSlide(), BASE_TEXT_OBJECT);
+        slide = addObject(slide, BASE_TEXT_OBJECT);
+        slide = addObject(slide, BASE_TEXT_OBJECT);
+        const [first, second, third] = slide.objects;
+        const newSlide = removeObjects(slide, [first.id, third.id]);
+        expect(newSlide.objects.map(object => object.id)).toEqual([second.id]);
+    });
+
+    it('should return the same slide when nothing is removed', () => {
+        const slide = addObject(createDefaultSlide(), BASE_TEXT_OBJECT);
+        expect(removeObjects(slide, ['missing'])).toBe(slide);
     });
 });
 

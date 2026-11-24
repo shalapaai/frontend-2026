@@ -9,9 +9,9 @@ import { addObject, updateObject } from "../../../store/slices/presentationSlice
 
 function PropertiesBar() {
     const dispatch = useAppDispatch();
-    const presentation = useAppSelector(state => state.presentation.presentation);
-    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
-    const selectedObjectIds = useAppSelector(state => state.presentation.selectedObjectIds);
+    const presentation = useAppSelector(state => state.presentation);
+    const activeSlideId = useAppSelector(state => state.viewModel.activeSlideId);
+    const selectedObjectIds = useAppSelector(state => state.viewModel.selectedObjectIds);
 
     const activeSlide = presentation?.slides.find(slide => slide.id === activeSlideId);
     const selectedObject = selectedObjectIds.length === 1

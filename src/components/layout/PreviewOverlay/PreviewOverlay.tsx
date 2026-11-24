@@ -1,13 +1,13 @@
 import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { setActiveSlide, setPreviewMode } from "../../../store/slices/presentationSlice";
+import { setActiveSlide, setPreviewMode } from "../../../store/slices/viewModelSlice";
 import { SlideView } from "../../slides/SlideView/SlideView";
 import styles from "./PreviewOverlay.module.css";
 
 function PreviewOverlay() {
     const dispatch = useAppDispatch();
-    const presentation = useAppSelector(state => state.presentation.presentation);
-    const activeSlideId = useAppSelector(state => state.presentation.activeSlideId);
+    const presentation = useAppSelector(state => state.presentation);
+    const activeSlideId = useAppSelector(state => state.viewModel.activeSlideId);
 
     const handleClose = useCallback(() => {
         dispatch(setPreviewMode(false));

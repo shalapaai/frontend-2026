@@ -1,5 +1,5 @@
 import { useAppDispatch } from "../../../store/hooks";
-import { setSelectedObjects, toggleSelectObject } from "../../../store/slices/presentationSlice";
+import { setSelectedObjects, setSelectionTarget, toggleSelectObject } from "../../../store/slices/viewModelSlice";
 import type { CSSProperties } from "react";
 import { useRef } from "react";
 import type { RefObject } from "react";
@@ -14,7 +14,6 @@ type SlideViewProps = {
     preview: boolean,
     className: string,
     setMenuState?: (menu: MenuState) => void,
-    setSelectionTarget?: (s: "slides" | "objects") => void
 }
 
 function SlideView(props: SlideViewProps) {
@@ -59,7 +58,7 @@ function SlideView(props: SlideViewProps) {
 
     const handleObjectSelect = (objectId: string, additive: boolean) => {
         if (!props.preview) return;
-        props.setSelectionTarget?.("objects");
+        dispatch(setSelectionTarget("objects"));
         if (additive) dispatch(toggleSelectObject(objectId));
         else dispatch(setSelectedObjects([objectId]));
     };

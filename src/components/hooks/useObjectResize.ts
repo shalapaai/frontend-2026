@@ -22,8 +22,8 @@ type ResizeState = Size & {
     moved: boolean;
 };
 
-function useObjectResize({ object, enabled, workspaceRef, slideRef, onResizeEnd }: Options) {
-    const { x, y, width, height } = object;
+function useObjectResize({ object, enabled, slideRef, onResizeEnd }: Options) {
+    const { width, height } = object;
     const resizeRef = useRef<ResizeState | null>(null);
     const [size, setSize] = useState<Size | null>(null);
     
@@ -48,21 +48,6 @@ function useObjectResize({ object, enabled, workspaceRef, slideRef, onResizeEnd 
             if (!resize.moved) return;
 
             const nextSize = getSize(event, resize);
-            const workspace = workspaceRef?.current;
-            const slide = slideRef.current;
-            if (!workspace || !slide) return;
-
-            const workspaceRect = workspace.getBoundingClientRect();
-            const slideRect = slide.getBoundingClientRect();
-            const left = slideRect.left + x * resize.scale;
-            const top = slideRect.top + y * resize.scale;
-            const workspaceLeft = workspaceRect.left + workspace.clientLeft;
-            const workspaceTop = workspaceRect.top + workspace.clientTop;
-
-            if (left < workspaceLeft || top < workspaceTop ||
-                left + nextSize.width * resize.scale > workspaceLeft + workspace.clientWidth ||
-                top + nextSize.height * resize.scale > workspaceTop + workspace.clientHeight) return;
-
             if (nextSize.width !== resize.width || nextSize.height !== resize.height) {
                 onResizeEnd(nextSize);
             }
@@ -81,14 +66,13 @@ function useObjectResize({ object, enabled, workspaceRef, slideRef, onResizeEnd 
             window.removeEventListener("mouseup", handleUp);
             window.removeEventListener("blur", cancel);
         };
-    }, [getSize, onResizeEnd, workspaceRef, slideRef, x, y]);
+    }, [getSize, onResizeEnd]);
 
     const onMouseDown = (event: MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
         if (!enabled || event.button !== 0) return;
         const slide = slideRef.current;
         if (!slide || !slide.offsetWidth || !slide.offsetHeight) return;
-        if (!workspaceRef?.current) return;
         const scale = slide.getBoundingClientRect().width / slide.offsetWidth;
         if (scale <= 0) return;
 
